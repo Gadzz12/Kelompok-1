@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="description" content="Organize projects, manage tasks, and keep your team aligned with Flowspace, a simpler workspace for getting work done.">
+    <title>Flowspace — Plan Projects and Manage Tasks Together</title>
+    <link rel="stylesheet" href="/static/app.css">
+    <link rel="stylesheet" href="/static/landing.css">
+</head>
+<body class="lp-body">
+    <a class="lp-skip" href="#main">Skip to content</a>
+
+    <svg class="lp-icon-sprite" aria-hidden="true" focusable="false">
+        <symbol id="lp-i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></g></symbol>
+        <symbol id="lp-i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke-width="2.4"/></g></symbol>
+        <symbol id="lp-i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
+        <symbol id="lp-i-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></g></symbol>
+        <symbol id="lp-i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></g></symbol>
+        <symbol id="lp-i-calendar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></g></symbol>
+        <symbol id="lp-i-layers" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></g></symbol>
+        <symbol id="lp-i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></g></symbol>
+        <symbol id="lp-i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="lp-i-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
+        <symbol id="lp-i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="lp-i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="lp-i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="lp-i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></g></symbol>
+    </svg>
+
+    <header class="lp-nav">
+        <div class="lp-container lp-nav-inner">
+            <a class="brand lp-brand" href="/" aria-label="Flowspace home">
+                <span class="brand-mark">F</span>
+                <span class="brand-name">Flowspace</span>
+            </a>
+
+            <nav class="lp-nav-links" aria-label="Main navigation">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#about">About</a>
+            </nav>
+
+            <div class="lp-nav-actions">
+                <a class="lp-login" href="/login">Log in</a>
+                <a class="btn btn-primary lp-cta-sm" href="/register">Get started</a>
+                <button type="button" class="lp-menu-btn" id="lpMenuBtn" aria-expanded="false" aria-controls="lpMobileMenu" aria-label="Open menu">
+                    <svg class="lp-ic lp-ic-menu" width="20" height="20" aria-hidden="true"><use href="#lp-i-menu"/></svg>
+                    <svg class="lp-ic lp-ic-close" width="20" height="20" aria-hidden="true"><use href="#lp-i-close"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="lp-mobile-menu" id="lpMobileMenu" hidden>
+            <nav aria-label="Mobile navigation">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#about">About</a>
+            </nav>
+            <div class="lp-mobile-actions">
+                <a class="lp-login" href="/login">Log in</a>
+                <a class="btn btn-primary lp-cta-sm" href="/register">Get started</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        <!-- Hero -->
+        <section class="lp-hero">
+            <div class="lp-container lp-hero-inner">
+                <p class="lp-eyebrow"><span class="lp-dot" aria-hidden="true"></span>Your work, in one place</p>
+                <h1>Bring your tasks together. <span>Get more done.</span></h1>
+                <p class="lp-lede">Plan projects, organize tasks, and collaborate with your team — all in one workspace. Stay focused on what matters and never miss a deadline.</p>
+
+                <div class="lp-hero-actions">
+                    <a class="btn btn-primary lp-btn-lg" href="/register">
+                        Get started for free
+                        <svg class="lp-ic" width="16" height="16" aria-hidden="true"><use href="#lp-i-arrow"/></svg>
+                    </a>
+                    <a class="btn lp-btn-lg lp-btn-outline" href="#features">Explore features</a>
+                </div>
+
+                <p class="lp-hero-note">
+                    <svg class="lp-ic" width="14" height="14" aria-hidden="true"><use href="#lp-i-check"/></svg>
+                    One workspace. Clear priorities. Better teamwork.
+                </p>
+            </div>
+        </section>
+
+        <!-- Product showcase -->
+        <section class="lp-showcase" aria-labelledby="showcase-title">
+            <div class="lp-container">
+                <div class="lp-section-head lp-section-head-center">
+                    <h2 id="showcase-title">A clearer view of everything you're working on.</h2>
+                    <p>See your projects, track task progress, and keep upcoming deadlines within reach. Everything you need to stay organized, without the clutter.</p>
+                </div>
+
+                <div class="lp-window" role="img" aria-label="Preview of the Flowspace dashboard showing projects, task progress, deadlines, and team members.">
+                    <div class="lp-app-topbar" aria-hidden="true">
+                        <div class="lp-app-brand">
+                            <span class="brand-mark">F</span>
+                            <strong>Kelompok 1</strong>
+                        </div>
+
+                        <span class="lp-app-search">
+                            <svg class="lp-ic" width="9" height="9"><use href="#lp-i-search"/></svg>
+                            Quick Search…
+                            <kbd>⌘</kbd><kbd>K</kbd>
+                        </span>
+
+                        <div class="lp-app-top-actions">
+                            <span class="lp-app-top-icon"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-bell"/></svg></span>
+                            <span class="lp-app-top-icon"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-mail"/></svg></span>
+                            <span class="lp-app-invite">+ Invite Member</span>
+                            <span class="lp-app-top-avatar">AR</span>
+                        </div>
+                    </div>
+
+                    <div class="lp-app" aria-hidden="true">
+                        <aside class="lp-app-side">
+                            <div class="lp-side-workspace">
+                                <span class="lp-side-avatar">AR</span>
+                                <div>
+                                    <strong>Abizard R.</strong>
+                                    <small>Kelompok 1 workspace</small>
+                                </div>
+                            </div>
+
+                            <span class="lp-side-label">Main menu</span>
+                            <span class="lp-side-item is-active"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-grid"/></svg>Dashboard</span>
+                            <span class="lp-side-item"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-mail"/></svg>Inbox<b>3</b></span>
+                            <span class="lp-side-item"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-users"/></svg>Team<b>4</b></span>
+                            <span class="lp-side-item"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-list"/></svg>My tasks<b>8</b></span>
+
+                            <span class="lp-side-label">Workspace</span>
+                            <span class="lp-side-item"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-doc"/></svg>Document</span>
+                            <span class="lp-side-item"><svg class="lp-ic" width="12" height="12"><use href="#lp-i-calendar"/></svg>Calendar</span>
+                        </aside>
+
+                        <div class="lp-app-main">
+                            <div class="lp-app-top">
+                                <span class="lp-app-crumb">Main Menu <span>/</span> Dashboard</span>
+                                <span class="lp-app-top-icon"><svg class="lp-ic" width="11" height="11"><use href="#lp-i-search"/></svg></span>
+                                <span class="lp-app-top-avatar">AR</span>
+                            </div>
+
+                            <div class="lp-app-content">
+                                <div class="lp-app-head">
+                                    <div>
+                                        <h3>Hello, Abizard. Manage your project.</h3>
+                                        <p>You can monitor, analyze, and refine essential metrics to improve your project outcomes.</p>
+                                    </div>
+                                    <span class="lp-app-new"><svg class="lp-ic" width="9" height="9"><use href="#lp-i-plus"/></svg>New Project</span>
+                                </div>
+
+                                <div class="lp-stats">
+                                    <div class="lp-stat">
+                                        <div class="lp-stat-top"><span>Total Projects</span><span class="lp-stat-icon is-primary"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-layers"/></svg></span></div>
+                                        <strong>5</strong>
+                                        <small>All active projects</small>
+                                    </div>
+                                    <div class="lp-stat">
+                                        <div class="lp-stat-top"><span>Completed Tasks</span><span class="lp-stat-icon is-green"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-check"/></svg></span></div>
+                                        <strong>12</strong>
+                                        <small>Tasks checked off</small>
+                                    </div>
+                                    <div class="lp-stat">
+                                        <div class="lp-stat-top"><span>Team Members</span><span class="lp-stat-icon is-purple"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-users"/></svg></span></div>
+                                        <strong>4</strong>
+                                        <small>People in workspace</small>
+                                    </div>
+                                    <div class="lp-stat">
+                                        <div class="lp-stat-top"><span>Upcoming</span><span class="lp-stat-icon is-blue"><svg class="lp-ic" width="10" height="10"><use href="#lp-i-calendar"/></svg></span></div>
+                                        <strong>3</strong>
+                                        <small>Next 7 days</small>
+                                    </div>
+                                </div>
+
+                                <div class="lp-board">
+                                    <div class="lp-board-head">
+                                        <div>
+                                            <strong>Project Overview</strong>
+                                            <small>Track work across every stage.</small>
+                                        </div>
+                                        <span class="lp-board-search"><svg class="lp-ic" width="9" height="9"><use href="#lp-i-search"/></svg>Search project…</span>
+                                    </div>
+
+                                    <div class="lp-group">
+                                        <div class="lp-group-title"><span class="lp-group-dot is-todo"></span>To do (2)<span class="lp-group-plus">+</span></div>
+                                        <div class="lp-app-row">
+                                            <span class="lp-row-task">Finalize project brief</span>
+                                            <span class="lp-row-date">20 Oct 2026</span>
+                                            <span class="lp-pill is-medium">Medium</span>
+                                            <span class="lp-avatars"><i>AR</i><i>ML</i></span>
+                                        </div>
+                                        <div class="lp-app-row">
+                                            <span class="lp-row-task">Collect team feedback</span>
+                                            <span class="lp-row-date">22 Oct 2026</span>
+                                            <span class="lp-pill is-high">High</span>
+                                            <span class="lp-avatars"><i>QA</i></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="lp-group">
+                                        <div class="lp-group-title"><span class="lp-group-dot is-progress"></span>On progress (2)<span class="lp-group-plus">+</span></div>
+                                        <div class="lp-app-row">
+                                            <span class="lp-row-task">Build dashboard layout</span>
+                                            <span class="lp-row-date">24 Oct 2026</span>
+                                            <span class="lp-pill is-medium">Medium</span>
+                                            <span class="lp-avatars"><i>AR</i><i>QA</i></span>
+                                        </div>
+                                        <div class="lp-app-row">
+                                            <span class="lp-row-task">Prepare launch checklist</span>
+                                            <span class="lp-row-date">28 Oct 2026</span>
+                                            <span class="lp-pill is-low">Low</span>
+                                            <span class="lp-avatars"><i>ML</i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="lp-section lp-features" id="features" aria-labelledby="features-title">
+            <div class="lp-container">
+                <div class="lp-section-head">
+                    <p class="lp-kicker">Features</p>
+                    <h2 id="features-title">Everything you need to keep work moving.</h2>
+                    <p>From planning your next project to keeping everyone in sync, Flowspace helps you turn scattered tasks into organized progress.</p>
+                </div>
+
+                <div class="lp-feature-grid">
+                    <article class="lp-feature">
+                        <span class="lp-feature-icon is-primary" aria-hidden="true">
+                            <svg class="lp-ic" width="21" height="21"><use href="#lp-i-layers"/></svg>
+                        </span>
+                        <h3>Organize work in one workspace</h3>
+                        <p>Keep your projects and tasks organized in one place. Create a clear structure for your work and know what needs your attention next.</p>
+                    </article>
+
+                    <article class="lp-feature">
+                        <span class="lp-feature-icon is-green" aria-hidden="true">
+                            <svg class="lp-ic" width="21" height="21"><use href="#lp-i-users"/></svg>
+                        </span>
+                        <h3>Work better, together</h3>
+                        <p>Bring your team into the same workspace. Make responsibilities clear and keep everyone aligned as projects move forward.</p>
+                    </article>
+
+                    <article class="lp-feature">
+                        <span class="lp-feature-icon is-amber" aria-hidden="true">
+                            <svg class="lp-ic" width="21" height="21"><use href="#lp-i-bell"/></svg>
+                        </span>
+                        <h3>Stay ahead of deadlines</h3>
+                        <p>Keep track of upcoming due dates and get reminders so important tasks don't slip through the cracks.</p>
+                    </article>
+
+                    <article class="lp-feature">
+                        <span class="lp-feature-icon is-blue" aria-hidden="true">
+                            <svg class="lp-ic" width="21" height="21"><use href="#lp-i-list"/></svg>
+                        </span>
+                        <h3>Know what's next</h3>
+                        <p>Track tasks from To Do to In Progress and Review. See where work stands and what needs to happen next.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section class="lp-section lp-how" id="how-it-works" aria-labelledby="how-title">
+            <div class="lp-container">
+                <div class="lp-how-panel">
+                    <div class="lp-section-head lp-how-head">
+                        <p class="lp-kicker">How it works</p>
+                        <h2 id="how-title">From to-do list to done.</h2>
+                        <p>Get your work organized in three simple steps.</p>
+                    </div>
+
+                    <div class="lp-how-grid">
+                        <article class="lp-step">
+                            <span class="lp-step-num" aria-hidden="true">01</span>
+                            <h3>Create a workspace</h3>
+                            <p>Set up a space for your projects, personal tasks, or team activities.</p>
+                        </article>
+                        <article class="lp-step">
+                            <span class="lp-step-num" aria-hidden="true">02</span>
+                            <h3>Add your tasks</h3>
+                            <p>Break projects into manageable tasks, set priorities, and assign deadlines.</p>
+                        </article>
+                        <article class="lp-step">
+                            <span class="lp-step-num" aria-hidden="true">03</span>
+                            <h3>Make progress</h3>
+                            <p>Update task statuses, collaborate with your team, and keep work moving forward.</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Collaboration -->
+        <section class="lp-section lp-collab" id="about" aria-labelledby="collab-title">
+            <div class="lp-container">
+                <div class="lp-collab-panel">
+                    <div class="lp-collab-copy">
+                        <p class="lp-kicker">Built for teamwork</p>
+                        <h2 id="collab-title">Good work happens when everyone is on the same page.</h2>
+                        <p class="lp-collab-lede">Bring people, projects, and priorities together. Give your team a shared space to coordinate work and make progress with greater clarity.</p>
+
+                        <ul class="lp-benefits">
+                            <li><span class="lp-check" aria-hidden="true"><svg class="lp-ic" width="11" height="11"><use href="#lp-i-check"/></svg></span>Shared workspace for your team</li>
+                            <li><span class="lp-check" aria-hidden="true"><svg class="lp-ic" width="11" height="11"><use href="#lp-i-check"/></svg></span>Clear task status and priorities</li>
+                            <li><span class="lp-check" aria-hidden="true"><svg class="lp-ic" width="11" height="11"><use href="#lp-i-check"/></svg></span>A better overview of project progress</li>
+                        </ul>
+                    </div>
+
+                    <div class="lp-team-card" aria-hidden="true">
+                        <div class="lp-team-head">
+                            <div>
+                                <strong>Team progress</strong>
+                                <small>Website redesign</small>
+                            </div>
+                            <span class="lp-team-badge">On track</span>
+                        </div>
+
+                        <div class="lp-team-members">
+                            <div class="lp-member">
+                                <span class="lp-member-avatar is-sand">AR</span>
+                                <div><strong>Abizard R.</strong><small>Project lead</small></div>
+                                <span class="lp-member-state is-done">Done</span>
+                            </div>
+                            <div class="lp-member">
+                                <span class="lp-member-avatar is-lilac">ML</span>
+                                <div><strong>Maya L.</strong><small>Design</small></div>
+                                <span class="lp-member-state is-active">In progress</span>
+                            </div>
+                            <div class="lp-member">
+                                <span class="lp-member-avatar is-butter">QA</span>
+                                <div><strong>Qori A.</strong><small>Quality check</small></div>
+                                <span class="lp-member-state is-todo">To do</span>
+                            </div>
+                        </div>
+
+                        <div class="lp-progress">
+                            <div class="lp-progress-meta"><span>Overall progress</span><strong>68%</strong></div>
+                            <div class="lp-progress-bar"><i></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="lp-section lp-final" aria-labelledby="final-title">
+            <div class="lp-container">
+                <div class="lp-final-panel">
+                    <p class="lp-kicker">Get started</p>
+                    <h2 id="final-title">Ready to make work feel simpler?</h2>
+                    <p>Bring your tasks into focus and make progress one step at a time.</p>
+                    <a class="btn btn-primary lp-btn-lg" href="/register">
+                        Get started for free
+                        <svg class="lp-ic" width="16" height="16" aria-hidden="true"><use href="#lp-i-arrow"/></svg>
+                    </a>
+                    <p class="lp-final-note">A better way to organize your everyday work.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="lp-footer">
+        <div class="lp-container">
+            <div class="lp-footer-top">
+                <div>
+                    <a class="brand lp-brand" href="/" aria-label="Flowspace home">
+                        <span class="brand-mark">F</span>
+                        <span class="brand-name">Flowspace</span>
+                    </a>
+                    <p class="lp-footer-desc">A simpler way to plan, organize, and get work done.</p>
+                </div>
+
+                <nav class="lp-footer-links" aria-label="Footer navigation">
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How it works</a>
+                    <a href="#about">About</a>
+                    <a href="/login">Log in</a>
+                    <a href="/register">Get started</a>
+                </nav>
+            </div>
+
+            <div class="lp-footer-bottom">
+                <span>© 2026 Flowspace. All rights reserved.</span>
+                <span>Built for individuals, freelancers, and small teams.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var btn = document.getElementById("lpMenuBtn");
+            var menu = document.getElementById("lpMobileMenu");
+
+            if (!btn || !menu) {
+                return;
+            }
+
+            function setOpen(open) {
+                btn.setAttribute("aria-expanded", open ? "true" : "false");
+                btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+                menu.hidden = !open;
+                document.body.classList.toggle("lp-menu-open", open);
+            }
+
+            btn.addEventListener("click", function () {
+                setOpen(btn.getAttribute("aria-expanded") !== "true");
+            });
+
+            menu.querySelectorAll("a").forEach(function (link) {
+                link.addEventListener("click", function () {
+                    setOpen(false);
+                });
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && btn.getAttribute("aria-expanded") === "true") {
+                    setOpen(false);
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

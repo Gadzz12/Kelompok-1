@@ -56,7 +56,11 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	userID := h.getLoggedInUserID(r)
 	if userID == 0 {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		// Pengunjung yang belum masuk melihat landing page terlebih dahulu.
+		if err := h.tmpl.ExecuteTemplate(w, "landing.html", nil); err != nil {
+			log.Println("Gagal render landing.html:", err)
+			http.Error(w, "Gagal memuat halaman", http.StatusInternalServerError)
+		}
 		return
 	}
 
