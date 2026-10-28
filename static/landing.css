@@ -277,8 +277,18 @@ html {
     text-wrap: balance;
 }
 
-.lp-hero h1 span {
+.lp-hero h1 .lp-line {
     display: block;
+    overflow: hidden;
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+}
+
+.lp-hero h1 .lp-line-in {
+    display: block;
+}
+
+.lp-hero h1 .lp-line:nth-of-type(2) .lp-line-in {
     color: var(--primary);
 }
 
@@ -1554,6 +1564,196 @@ html {
     }
 }
 
+/* ============================================================
+   Motion — intro & scroll-reveal animations
+   ============================================================ */
+
+/* ---------- First load (nav & hero) ---------- */
+
+@keyframes lp-nav-in {
+    from {
+        opacity: 0;
+        transform: translateY(-14px);
+    }
+}
+
+@keyframes lp-intro {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+}
+
+@keyframes lp-line-rise {
+    from {
+        transform: translateY(125%);
+    }
+}
+
+@keyframes lp-glow-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes lp-dot-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 4px rgba(240, 83, 51, 0.14);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(240, 83, 51, 0.05);
+    }
+}
+
+.lp-nav {
+    animation: lp-nav-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    transition: box-shadow 0.3s ease;
+}
+
+.lp-nav.lp-nav-scrolled {
+    box-shadow: 0 14px 34px rgba(16, 8, 4, 0.24);
+}
+
+.lp-eyebrow {
+    animation: lp-intro 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+}
+
+.lp-hero h1 .lp-line-in {
+    animation: lp-line-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.22s backwards;
+}
+
+.lp-hero h1 .lp-line:nth-of-type(2) .lp-line-in {
+    animation-delay: 0.34s;
+}
+
+.lp-lede {
+    animation: lp-intro 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.46s backwards;
+}
+
+.lp-hero-actions {
+    animation: lp-intro 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.56s backwards;
+}
+
+.lp-hero-note {
+    animation: lp-intro 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.66s backwards;
+}
+
+.lp-hero::before,
+.lp-hero::after {
+    animation: lp-glow-in 1.6s ease 0.15s backwards;
+}
+
+.lp-dot {
+    animation: lp-dot-pulse 2.8s ease-in-out 1.8s infinite;
+}
+
+/* ---------- Scroll reveal ---------- */
+
+@keyframes lp-rise {
+    from {
+        opacity: 0;
+        transform: translateY(var(--rise-y, 26px));
+    }
+}
+
+@keyframes lp-rise-zoom {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+}
+
+@keyframes lp-rise-left {
+    from {
+        opacity: 0;
+        transform: translateX(-34px);
+    }
+}
+
+@keyframes lp-rise-right {
+    from {
+        opacity: 0;
+        transform: translateX(34px);
+    }
+}
+
+/* Hidden until revealed — only when JS is available (html.lp-js) */
+.lp-js [data-reveal]:not(.is-revealed) {
+    opacity: 0;
+}
+
+.lp-js [data-reveal].is-revealed {
+    animation: lp-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--reveal-delay, 0ms);
+}
+
+.lp-js [data-reveal="zoom"].is-revealed {
+    animation-name: lp-rise-zoom;
+}
+
+.lp-js [data-reveal="left"].is-revealed {
+    animation-name: lp-rise-left;
+}
+
+.lp-js [data-reveal="right"].is-revealed {
+    animation-name: lp-rise-right;
+}
+
+/* Stagger cards inside grids */
+.lp-js .lp-feature:nth-child(2) { --reveal-delay: 90ms; }
+.lp-js .lp-feature:nth-child(3) { --reveal-delay: 180ms; }
+.lp-js .lp-feature:nth-child(4) { --reveal-delay: 270ms; }
+
+.lp-js .lp-how-grid .lp-step:nth-child(2) { --reveal-delay: 120ms; }
+.lp-js .lp-how-grid .lp-step:nth-child(3) { --reveal-delay: 240ms; }
+
+/* Progress bar fills once the team card is revealed */
+.lp-js .lp-progress-bar i {
+    width: 0;
+    transition: width 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s;
+}
+
+.lp-js .lp-team-card.is-revealed .lp-progress-bar i {
+    width: 68%;
+}
+
+/* Final panel glow fades in after the panel itself */
+.lp-js .lp-final-panel::before {
+    opacity: 0;
+    transition: opacity 1.2s ease 0.45s;
+}
+
+.lp-js .lp-final-panel.is-revealed::before {
+    opacity: 1;
+}
+
+.lp-footer-top { --rise-y: 16px; }
+.lp-footer-bottom { --rise-y: 10px; }
+
+/* ---------- Mobile menu ---------- */
+
+@keyframes lp-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+.lp-mobile-menu:not([hidden]) {
+    animation: lp-menu-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* ---------- Slide variants stack vertically on small screens ---------- */
+
+@media (max-width: 820px) {
+    .lp-js .lp-collab-copy.is-revealed,
+    .lp-js .lp-team-card.is-revealed {
+        animation-name: lp-rise;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
@@ -1561,6 +1761,34 @@ html {
 
     .lp-feature,
     .lp-btn-outline {
+        transition: none;
+    }
+
+    .lp-js [data-reveal]:not(.is-revealed) {
+        opacity: 1;
+    }
+
+    .lp-js [data-reveal].is-revealed,
+    .lp-mobile-menu:not([hidden]),
+    .lp-nav,
+    .lp-eyebrow,
+    .lp-hero h1 .lp-line-in,
+    .lp-lede,
+    .lp-hero-actions,
+    .lp-hero-note,
+    .lp-hero::before,
+    .lp-hero::after,
+    .lp-dot {
+        animation: none;
+    }
+
+    .lp-js .lp-progress-bar i {
+        width: 68%;
+        transition: none;
+    }
+
+    .lp-js .lp-final-panel::before {
+        opacity: 1;
         transition: none;
     }
 }

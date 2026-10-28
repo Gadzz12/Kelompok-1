@@ -6,6 +6,7 @@
     <meta name="color-scheme" content="light">
     <meta name="description" content="Organize projects, manage tasks, and keep your team aligned with Flowspace, a simpler workspace for getting work done.">
     <title>Flowspace — Plan Projects and Manage Tasks Together</title>
+    <script>document.documentElement.classList.add("lp-js");</script>
     <link rel="stylesheet" href="/static/app.css">
     <link rel="stylesheet" href="/static/landing.css">
 </head>
@@ -70,7 +71,10 @@
         <section class="lp-hero">
             <div class="lp-container lp-hero-inner">
                 <p class="lp-eyebrow"><span class="lp-dot" aria-hidden="true"></span>Your work, in one place</p>
-                <h1>Bring your tasks together. <span>Get more done.</span></h1>
+                <h1>
+                    <span class="lp-line"><span class="lp-line-in">Bring your tasks together.</span></span>
+                    <span class="lp-line"><span class="lp-line-in">Get more done.</span></span>
+                </h1>
                 <p class="lp-lede">Plan projects, organize tasks, and collaborate with your team — all in one workspace. Stay focused on what matters and never miss a deadline.</p>
 
                 <div class="lp-hero-actions">
@@ -91,12 +95,12 @@
         <!-- Product showcase -->
         <section class="lp-showcase" aria-labelledby="showcase-title">
             <div class="lp-container">
-                <div class="lp-section-head lp-section-head-center">
+                <div class="lp-section-head lp-section-head-center" data-reveal>
                     <h2 id="showcase-title">A clearer view of everything you're working on.</h2>
                     <p>See your projects, track task progress, and keep upcoming deadlines within reach. Everything you need to stay organized, without the clutter.</p>
                 </div>
 
-                <div class="lp-window" role="img" aria-label="Preview of the Flowspace dashboard showing projects, task progress, deadlines, and team members.">
+                <div class="lp-window" data-reveal="zoom" role="img" aria-label="Preview of the Flowspace dashboard showing projects, task progress, deadlines, and team members.">
                     <div class="lp-app-topbar" aria-hidden="true">
                         <div class="lp-app-brand">
                             <span class="brand-mark">F</span>
@@ -228,14 +232,14 @@
         <!-- Features -->
         <section class="lp-section lp-features" id="features" aria-labelledby="features-title">
             <div class="lp-container">
-                <div class="lp-section-head">
+                <div class="lp-section-head" data-reveal>
                     <p class="lp-kicker">Features</p>
                     <h2 id="features-title">Everything you need to keep work moving.</h2>
                     <p>From planning your next project to keeping everyone in sync, Flowspace helps you turn scattered tasks into organized progress.</p>
                 </div>
 
                 <div class="lp-feature-grid">
-                    <article class="lp-feature">
+                    <article class="lp-feature" data-reveal>
                         <span class="lp-feature-icon is-primary" aria-hidden="true">
                             <svg class="lp-ic" width="21" height="21"><use href="#lp-i-layers"/></svg>
                         </span>
@@ -243,7 +247,7 @@
                         <p>Keep your projects and tasks organized in one place. Create a clear structure for your work and know what needs your attention next.</p>
                     </article>
 
-                    <article class="lp-feature">
+                    <article class="lp-feature" data-reveal>
                         <span class="lp-feature-icon is-green" aria-hidden="true">
                             <svg class="lp-ic" width="21" height="21"><use href="#lp-i-users"/></svg>
                         </span>
@@ -251,7 +255,7 @@
                         <p>Bring your team into the same workspace. Make responsibilities clear and keep everyone aligned as projects move forward.</p>
                     </article>
 
-                    <article class="lp-feature">
+                    <article class="lp-feature" data-reveal>
                         <span class="lp-feature-icon is-amber" aria-hidden="true">
                             <svg class="lp-ic" width="21" height="21"><use href="#lp-i-bell"/></svg>
                         </span>
@@ -259,7 +263,7 @@
                         <p>Keep track of upcoming due dates and get reminders so important tasks don't slip through the cracks.</p>
                     </article>
 
-                    <article class="lp-feature">
+                    <article class="lp-feature" data-reveal>
                         <span class="lp-feature-icon is-blue" aria-hidden="true">
                             <svg class="lp-ic" width="21" height="21"><use href="#lp-i-list"/></svg>
                         </span>
@@ -274,24 +278,24 @@
         <section class="lp-section lp-how" id="how-it-works" aria-labelledby="how-title">
             <div class="lp-container">
                 <div class="lp-how-panel">
-                    <div class="lp-section-head lp-how-head">
+                    <div class="lp-section-head lp-how-head" data-reveal>
                         <p class="lp-kicker">How it works</p>
                         <h2 id="how-title">From to-do list to done.</h2>
                         <p>Get your work organized in three simple steps.</p>
                     </div>
 
                     <div class="lp-how-grid">
-                        <article class="lp-step">
+                        <article class="lp-step" data-reveal>
                             <span class="lp-step-num" aria-hidden="true">01</span>
                             <h3>Create a workspace</h3>
                             <p>Set up a space for your projects, personal tasks, or team activities.</p>
                         </article>
-                        <article class="lp-step">
+                        <article class="lp-step" data-reveal>
                             <span class="lp-step-num" aria-hidden="true">02</span>
                             <h3>Add your tasks</h3>
                             <p>Break projects into manageable tasks, set priorities, and assign deadlines.</p>
                         </article>
-                        <article class="lp-step">
+                        <article class="lp-step" data-reveal>
                             <span class="lp-step-num" aria-hidden="true">03</span>
                             <h3>Make progress</h3>
                             <p>Update task statuses, collaborate with your team, and keep work moving forward.</p>
@@ -305,7 +309,7 @@
         <section class="lp-section lp-collab" id="about" aria-labelledby="collab-title">
             <div class="lp-container">
                 <div class="lp-collab-panel">
-                    <div class="lp-collab-copy">
+                    <div class="lp-collab-copy" data-reveal="left">
                         <p class="lp-kicker">Built for teamwork</p>
                         <h2 id="collab-title">Good work happens when everyone is on the same page.</h2>
                         <p class="lp-collab-lede">Bring people, projects, and priorities together. Give your team a shared space to coordinate work and make progress with greater clarity.</p>
@@ -317,7 +321,7 @@
                         </ul>
                     </div>
 
-                    <div class="lp-team-card" aria-hidden="true">
+                    <div class="lp-team-card" data-reveal="right" aria-hidden="true">
                         <div class="lp-team-head">
                             <div>
                                 <strong>Team progress</strong>
@@ -356,7 +360,7 @@
         <!-- Final CTA -->
         <section class="lp-section lp-final" aria-labelledby="final-title">
             <div class="lp-container">
-                <div class="lp-final-panel">
+                <div class="lp-final-panel" data-reveal="zoom">
                     <p class="lp-kicker">Get started</p>
                     <h2 id="final-title">Ready to make work feel simpler?</h2>
                     <p>Bring your tasks into focus and make progress one step at a time.</p>
@@ -372,7 +376,7 @@
 
     <footer class="lp-footer">
         <div class="lp-container">
-            <div class="lp-footer-top">
+            <div class="lp-footer-top" data-reveal>
                 <div>
                     <a class="brand lp-brand" href="/" aria-label="Flowspace home">
                         <span class="brand-mark">F</span>
@@ -390,7 +394,7 @@
                 </nav>
             </div>
 
-            <div class="lp-footer-bottom">
+            <div class="lp-footer-bottom" data-reveal>
                 <span>© 2026 Flowspace. All rights reserved.</span>
                 <span>Built for individuals, freelancers, and small teams.</span>
             </div>
@@ -429,6 +433,74 @@
                     btn.focus();
                 }
             });
+        })();
+
+        /* Scroll-reveal animations + nav scroll state */
+        (function () {
+            var nav = document.querySelector(".lp-nav");
+            var reduce = window.matchMedia
+                && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            var items = document.querySelectorAll("[data-reveal]");
+            var observer = null;
+            var pending = items.length;
+            var ticking = false;
+
+            function revealAll() {
+                pending = 0;
+                items.forEach(function (el) {
+                    el.classList.add("is-revealed");
+                });
+            }
+
+            if (!items.length && !nav) {
+                return;
+            }
+
+            if (reduce || !("IntersectionObserver" in window)) {
+                revealAll();
+            } else {
+                observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) {
+                            return;
+                        }
+                        entry.target.classList.add("is-revealed");
+                        observer.unobserve(entry.target);
+                        pending--;
+                    });
+                }, {
+                    rootMargin: "0px 0px -12% 0px",
+                    threshold: 0
+                });
+
+                items.forEach(function (el) {
+                    observer.observe(el);
+                });
+            }
+
+            function update() {
+                ticking = false;
+
+                if (nav) {
+                    nav.classList.toggle("lp-nav-scrolled", window.scrollY > 6);
+                }
+
+                /* Elemen paling bawah tidak akan menyentuh garis reveal,
+                   jadi paksa tampil saat halaman sudah mentok ke bawah. */
+                if (pending > 0
+                    && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+                    revealAll();
+                }
+            }
+
+            window.addEventListener("scroll", function () {
+                if (!ticking) {
+                    ticking = true;
+                    window.requestAnimationFrame(update);
+                }
+            }, { passive: true });
+
+            update();
         })();
     </script>
 </body>
