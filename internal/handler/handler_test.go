@@ -21,6 +21,7 @@ func TestHandlerAuthAndDashboard(t *testing.T) {
 
 	// Inisialisasi dummy template sederhana untuk testing
 	tmpl := template.Must(template.New("dashboard.html").Parse("Dashboard: {{.Username}}"))
+	template.Must(tmpl.New("landing.html").Parse("Landing Page"))
 	template.Must(tmpl.New("login.html").Parse("Login Form"))
 	template.Must(tmpl.New("register.html").Parse("Register Form"))
 	template.Must(tmpl.New("settings.html").Parse("Settings: {{.Username}}, {{.Email}}"))
@@ -71,12 +72,12 @@ func TestHandlerAuthAndDashboard(t *testing.T) {
 		t.Fatalf("Cookie user_id tidak sesuai: %v", authCookie)
 	}
 
-	// 3. Test Dashboard tanpa login (harus redirect ke /login)
+	// 3. Test halaman awal tanpa login (harus menampilkan landing page)
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
 	rec = httptest.NewRecorder()
 	h.Dashboard(rec, req)
-	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/login" {
-		t.Fatalf("Dashboard tanpa login harus redirect ke /login, got code %d to %s", rec.Code, rec.Header().Get("Location"))
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Landing Page") {
+		t.Fatalf("Halaman awal tanpa login harus menampilkan landing page, got code %d body %s", rec.Code, rec.Body.String())
 	}
 
 	// 4. Test Dashboard dengan cookie login
