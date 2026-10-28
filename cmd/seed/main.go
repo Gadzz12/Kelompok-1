@@ -22,8 +22,8 @@ func main() {
 		log.Fatalf("Gagal AutoMigrate: %v", err)
 	}
 
-	if err := database.SeedFromJSON(db, cfg.DBFile); err != nil {
-		log.Fatalf("Gagal seeding data dari %s: %v", cfg.DBFile, err)
+	if err := database.SeedDefaultData(db); err != nil {
+		log.Fatalf("Gagal seeding data: %v", err)
 	}
 
 	log.Println("Seeding database selesai dengan sukses.")

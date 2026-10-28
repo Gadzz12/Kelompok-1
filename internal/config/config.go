@@ -11,7 +11,6 @@ import (
 // Config menyimpan seluruh konfigurasi aplikasi dari .env dan environment
 type Config struct {
 	Port        string
-	DBFile      string
 	DatabaseURL string
 }
 
@@ -31,16 +30,10 @@ func Load() Config {
 		port = ":" + port
 	}
 
-	dbFile := os.Getenv("DB_FILE")
-	if dbFile == "" {
-		dbFile = "data.json"
-	}
-
 	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
 
 	return Config{
 		Port:        port,
-		DBFile:      dbFile,
 		DatabaseURL: databaseURL,
 	}
 }

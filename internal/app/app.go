@@ -16,29 +16,26 @@ import (
 func Run() {
 	cfg := config.Load()
 
-	var repo repository.Repository
-
-	// Cek apakah DATABASE_URL tersedia di .env
-	if cfg.DatabaseURL != "" {
-		log.Println("Mencoba menghubungkan ke PostgreSQL melalui DATABASE_URL...")
-		db, err := database.Open(cfg.DatabaseURL)
-		if err != nil {
-			log.Printf("PERINGATAN: Gagal koneksi ke database (%v). Menggunakan fallback penyimpanan %s.", err, cfg.DBFile)
-			repo = repository.NewJSONRepository(cfg.DBFile)
-		} else {
-			if err := database.AutoMigrate(db); err != nil {
-				log.Fatalf("Gagal melakukan AutoMigrate database: %v", err)
-			}
-			if err := database.SeedFromJSON(db, cfg.DBFile); err != nil {
-				log.Printf("Peringatan seeding dari %s: %v", cfg.DBFile, err)
-			}
-			repo = repository.NewGORMRepository(db)
-			log.Println("STATUS: Berhasil terhubung ke database PostgreSQL/Neon/Supabase.")
-		}
-	} else {
-		log.Printf("STATUS: DATABASE_URL tidak diatur di .env. Menggunakan penyimpanan file %s.", cfg.DBFile)
-		repo = repository.NewJSONRepository(cfg.DBFile)
+	if cfg.DatabaseURL == "" {
+		log.Fatal("DATABASE_URL belum diatur di file .env. Aplikasi ini memerlukan database PostgreSQL (Neon / Supabase). Silakan isi DATABASE_URL.")
 	}
+
+	log.Println("Mencoba menghubungkan ke database PostgreSQL...")
+	db, err := database.Open(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("Gagal terhubung ke database PostgreSQL: %v", err)
+	}
+
+	if err := database.AutoMigrate(db); err != nil {
+		log.Fatalf("Gagal melakukan AutoMigrate database: %v", err)
+	}
+
+	if err := database.SeedDefaultData(db); err != nil {
+		log.Printf("Peringatan saat seeding data awal database: %v", err)
+	}
+
+	repo := repository.NewGORMRepository(db)
+	log.Println("STATUS: Berhasil terhubung ke database PostgreSQL.")
 
 	tmpl, err := template.ParseGlob("templates/*.html")
 	if err != nil {

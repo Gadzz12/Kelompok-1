@@ -38,7 +38,7 @@ func Open(dsn string) (*gorm.DB, error) {
 	}
 
 	if query.Get("connect_timeout") == "" {
-		query.Set("connect_timeout", "10")
+		query.Set("connect_timeout", "25")
 	}
 	u.RawQuery = query.Encode()
 
@@ -46,12 +46,12 @@ func Open(dsn string) (*gorm.DB, error) {
 		DSN:                  u.String(),
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{
-		TranslateError:      true,
+		TranslateError:       true,
 		DisableAutomaticPing: true,
-		Logger:              logger.Default.LogMode(logger.Warn),
+		Logger:               logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
-		return nil, errors.New("konfigurasi koneksi PostgreSQL tidak valid")
+		return nil, fmt.Errorf("konfigurasi koneksi PostgreSQL tidak valid: %w", err)
 	}
 
 	conn, err := db.DB()
@@ -64,12 +64,12 @@ func Open(dsn string) (*gorm.DB, error) {
 	conn.SetConnMaxLifetime(30 * time.Minute)
 	conn.SetConnMaxIdleTime(5 * time.Minute)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 
 	if err := conn.PingContext(ctx); err != nil {
 		conn.Close()
-		return nil, errors.New("koneksi PostgreSQL gagal; periksa DATABASE_URL dan akses jaringan")
+		return nil, fmt.Errorf("koneksi PostgreSQL gagal; periksa DATABASE_URL dan akses jaringan: %w", err)
 	}
 
 	return db, nil
@@ -87,7 +87,31 @@ func AutoMigrate(db *gorm.DB) error {
 	)
 }
 
-// SeedFromJSON menyalin data dari data.json ke database jika tabel masih kosong
+// SeedDefaultData membuat user awal jika tabel users di database masih kosong
+func SeedDefaultData(db *gorm.DB) error {
+	var count int64
+	if err := db.Model(&model.User{}).Count(&count).Error; err != nil {
+		return err
+	}
+
+	// Jika tabel user sudah terisi, lewati seeding
+	if count > 0 {
+		return nil
+	}
+
+	log.Println("Tabel database kosong. Memasukkan data awal default ke database...")
+	defaultUser := model.User{
+		Nama:      "abizard rahadyan",
+		Username:  "Gadzz12",
+		Email:     "abizardrahadyan5@gmail.com",
+		Password:  "wasdwasd",
+		CreatedAt: time.Now(),
+	}
+
+	return db.Create(&defaultUser).Error
+}
+
+// SeedFromJSON menyalin data dari file JSON ke database jika tabel masih kosong (opsional)
 func SeedFromJSON(db *gorm.DB, jsonPath string) error {
 	var count int64
 	if err := db.Model(&model.User{}).Count(&count).Error; err != nil {
