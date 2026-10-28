@@ -27,7 +27,7 @@ func (h *Handler) Settings(w http.ResponseWriter, r *http.Request) {
 		allTodos = []model.Todo{}
 	}
 
-	countDone, countOngoing, countPending, total, _, _, _, _ := h.repo.CalculateStats(allTodos)
+	countDone, countOngoing, countPending, total, donePercent, _, _, _ := h.repo.CalculateStats(allTodos)
 
 	initial := ""
 	if user.Nama != "" {
@@ -56,6 +56,7 @@ func (h *Handler) Settings(w http.ResponseWriter, r *http.Request) {
 		CountPending: countPending,
 		CountOngoing: countOngoing,
 		CountDone:    countDone,
+		DonePercent:  donePercent,
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "settings.html", data); err != nil {

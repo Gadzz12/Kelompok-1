@@ -18,6 +18,7 @@ type Repository interface {
 	UpdateTodo(id int, userID int, title, description, deadline, status string, priority ...string) error
 	DeleteTodo(id int, userID int) error
 	ToggleSubTodo(todoID int, subID int, userID int) error
+	SyncSubTodos(todoID int, userID int, subIDs []int, subTitles []string) error
 	UpdateTodoStatus(todoID int, status string, userID int) error
 	AddCollaborator(todoID int, ownerID int, email string) error
 	AttachDocument(todoID int, userID int, document string) error
@@ -32,6 +33,11 @@ type Repository interface {
 	MarkAllInboxAsRead(userEmail string) error
 	GetTeamMembers(userEmail string) ([]model.TeamMember, error)
 	GetUserSimpleTodos(userID int, userEmail string) ([]model.TodoSimple, error)
+
+	// Friend / Team Network operations
+	AddFriend(userID int, friendIdentifier string) (*model.User, error)
+	GetFriends(userID int) ([]model.FriendUser, error)
+	RemoveFriend(userID int, friendID int) error
 
 	// Stats calculation
 	CalculateStats(todos []model.Todo) (countDone, countOngoing, countPending, total, donePercent, ongoingPercent, pendingPercent, ongoingEndPercent int)

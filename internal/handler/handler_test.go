@@ -92,6 +92,18 @@ func TestHandlerAuthAndDashboard(t *testing.T) {
 		t.Fatalf("Body tidak memuat username budi: %s", rec.Body.String())
 	}
 
+	// 4b. Test My Tasks (/tasks) dengan cookie login
+	req = httptest.NewRequest(http.MethodGet, "/tasks", nil)
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	h.Dashboard(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("/tasks dengan login expected status 200, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "Dashboard: budi") {
+		t.Fatalf("Body /tasks tidak memuat username budi: %s", rec.Body.String())
+	}
+
 	// 5. Test Settings tanpa login (harus redirect ke /login)
 	req = httptest.NewRequest(http.MethodGet, "/settings", nil)
 	rec = httptest.NewRecorder()
@@ -151,13 +163,16 @@ func TestHandlerAuthAndDashboard(t *testing.T) {
 		t.Fatalf("Created todo priority expected 'high', got %v", userTodos)
 	}
 
-	// 9. Test EditTodo with Priority Low
+	// 9. Test EditTodo with Priority Low, Subtasks, and Document
 	editForm := url.Values{}
 	editForm.Set("title", "Handler Low Priority Task")
 	editForm.Set("description", "Testing updated task priority")
 	editForm.Set("deadline", "2026-12-31T23:59")
 	editForm.Set("status", "sedang")
 	editForm.Set("priority", "low")
+	editForm.Add("sub_ids", "0")
+	editForm.Add("sub_titles", "Milestone A")
+	editForm.Set("document", "Report.pdf")
 
 	req = httptest.NewRequest(http.MethodPost, "/todo/edit?id=1", strings.NewReader(editForm.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -171,6 +186,12 @@ func TestHandlerAuthAndDashboard(t *testing.T) {
 	editedTodo, _, _ := repo.GetTodoByID(1, 1, "budi@example.com")
 	if editedTodo.Priority != "low" {
 		t.Fatalf("Edited todo priority expected 'low', got %q", editedTodo.Priority)
+	}
+	if len(editedTodo.SubTodos) != 1 || editedTodo.SubTodos[0].Title != "Milestone A" {
+		t.Fatalf("Expected subtask 'Milestone A', got %v", editedTodo.SubTodos)
+	}
+	if editedTodo.Document != "Report.pdf" {
+		t.Fatalf("Expected document 'Report.pdf', got %q", editedTodo.Document)
 	}
 
 	// 10. Test EditTodo GET (renders edit_todo.html with dashboard shell data)
@@ -312,4 +333,45 @@ func TestActualTemplatesParsing(t *testing.T) {
 	if !strings.Contains(buf.String(), "Pengaturan") {
 		t.Fatal("settings.html tidak memuat judul Pengaturan")
 	}
+
+	// Test render edit_todo.html for member (should contain "you can't change task")
+	editDataMember := model.DashboardData{
+		Username: "member",
+		Todo: model.Todo{
+			ID:      10,
+			Title:   "Member Viewed Task",
+			IsOwner: false,
+		},
+	}
+	buf.Reset()
+	if err := tmpl.ExecuteTemplate(&buf, "edit_todo.html", editDataMember); err != nil {
+		t.Fatalf("Gagal render edit_todo.html untuk member: %v", err)
+	}
+	if !strings.Contains(buf.String(), "you can't change task") {
+		t.Fatal("edit_todo.html untuk member tidak memuat peringatan 'you can't change task'")
+	}
 }
+
+func TestServeLogo(t *testing.T) {
+	repo := repository.NewJSONRepository(filepath.Join(t.TempDir(), "test.json"))
+	h := New(repo, nil)
+	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+
+	for _, path := range []string{"/static/logo.png", "/logo.png"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("Expected 200 OK for %s, got %d", path, rec.Code)
+		}
+		if rec.Header().Get("Content-Type") != "image/png" {
+			t.Fatalf("Expected Content-Type image/png for %s, got %s", path, rec.Header().Get("Content-Type"))
+		}
+		if rec.Body.Len() == 0 {
+			t.Fatalf("Expected non-empty image body for %s", path)
+		}
+	}
+}
+

@@ -33,7 +33,7 @@
         root.style.colorScheme = theme;
 
         document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
-            var label = theme === "dark" ? "Aktifkan tema terang" : "Aktifkan tema gelap";
+            var label = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
             btn.setAttribute("aria-label", label);
             btn.setAttribute("title", label);
             btn.setAttribute("data-next-theme", theme === "dark" ? "light" : "dark");
@@ -49,7 +49,7 @@
         });
 
         document.querySelectorAll("[data-theme-label]").forEach(function (el) {
-            el.textContent = theme === "dark" ? "Gelap" : "Terang";
+            el.textContent = theme === "dark" ? "Dark" : "Light";
         });
     }
 
@@ -93,21 +93,99 @@
 
     applyMode(readMode());
 
-    /* ---------------- Sidebar ---------------- */
+    /* ---------------- Auto-Collapsing Sidebar (Dovee Style) ---------------- */
 
-    var SIDEBAR_KEY = "todo-sidebar";
-
+    var sidebar = document.querySelector(".sidebar");
     var collapseBtn = document.getElementById("sidebarCollapse");
-    if (collapseBtn) {
-        collapseBtn.addEventListener("click", function () {
-            var collapsed = root.classList.toggle("sidebar-collapsed");
-            collapseBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
-            try {
-                localStorage.setItem(SIDEBAR_KEY, collapsed ? "collapsed" : "open");
-            } catch (err) {
-                /* ignore */
+    var leaveTimer = null;
+
+    function isDesktop() {
+        return window.matchMedia("(min-width: 1025px)").matches;
+    }
+
+    function expandSidebar() {
+        if (!isDesktop() || !sidebar) return;
+        if (leaveTimer) {
+            clearTimeout(leaveTimer);
+            leaveTimer = null;
+        }
+        sidebar.classList.add("sidebar-hover-open");
+        root.classList.remove("sidebar-collapsed");
+    }
+
+    function collapseSidebar() {
+        if (!isDesktop() || !sidebar) return;
+        sidebar.classList.remove("sidebar-hover-open");
+        root.classList.add("sidebar-collapsed");
+        if (document.activeElement && sidebar.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    }
+
+    if (sidebar) {
+        // When mouse cursor enters sidebar: automatically open/expand
+        sidebar.addEventListener("mouseenter", function () {
+            expandSidebar();
+        });
+
+        // When mouse cursor leaves sidebar: automatically close/collapse
+        sidebar.addEventListener("mouseleave", function () {
+            if (!isDesktop()) return;
+            if (leaveTimer) clearTimeout(leaveTimer);
+            leaveTimer = setTimeout(collapseSidebar, 50);
+        });
+
+        // Document-wide safety: if mouse cursor is anywhere outside sidebar, collapse sidebar
+        document.addEventListener("mousemove", function (e) {
+            if (!isDesktop()) return;
+            if (!sidebar.contains(e.target)) {
+                if (sidebar.classList.contains("sidebar-hover-open")) {
+                    collapseSidebar();
+                }
             }
         });
+
+        // Prevent clicked items from retaining persistent focus and keeping sidebar expanded
+        sidebar.querySelectorAll("a, button").forEach(function (el) {
+            el.addEventListener("click", function () {
+                if (this.blur) this.blur();
+            });
+        });
+    }
+
+    // Toggle button (<) closes sidebar on desktop, or toggles drawer on mobile
+    if (collapseBtn) {
+        collapseBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (isDesktop()) {
+                collapseSidebar();
+            } else {
+                root.classList.toggle("sidebar-open");
+            }
+        });
+    }
+
+    // Default state on load on desktop: sidebar is collapsed, giving dashboard maximum space
+    if (isDesktop()) {
+        root.classList.add("sidebar-collapsed");
+        if (sidebar) sidebar.classList.remove("sidebar-hover-open");
+    }
+
+    // Auto-scroll and highlight avatar builder if requested
+    if (window.location.hash === "#avatar-builder") {
+        setTimeout(function () {
+            var target = document.getElementById("avatar-builder");
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                target.style.transition = "box-shadow 0.4s ease, border-color 0.4s ease";
+                target.style.borderColor = "var(--primary)";
+                target.style.boxShadow = "0 0 0 3px rgba(240, 83, 51, 0.25)";
+                setTimeout(function () {
+                    target.style.borderColor = "";
+                    target.style.boxShadow = "";
+                }, 2200);
+            }
+        }, 180);
     }
 
     var menuBtn = document.getElementById("menuToggle");
@@ -160,11 +238,12 @@
     /* ---------------- Task search + priority filter ---------------- */
 
     var searchInputs = Array.prototype.slice.call(document.querySelectorAll("[data-task-search]"));
-    var prioritySelect = document.getElementById("priorityFilter");
+    var prioritySelects = Array.prototype.slice.call(document.querySelectorAll("#priorityFilter, [data-priority-filter]"));
+    var currentPriority = "";
     var query = "";
 
     function applyFilters() {
-        var priority = prioritySelect ? prioritySelect.value : "";
+        var priority = currentPriority;
         var needle = query.trim().toLowerCase();
 
         document.querySelectorAll(".group").forEach(function (group) {
@@ -220,9 +299,17 @@
         });
     });
 
-    if (prioritySelect) {
-        prioritySelect.addEventListener("change", applyFilters);
-    }
+    prioritySelects.forEach(function (sel) {
+        sel.addEventListener("change", function () {
+            currentPriority = sel.value;
+            prioritySelects.forEach(function (other) {
+                if (other !== sel) {
+                    other.value = currentPriority;
+                }
+            });
+            applyFilters();
+        });
+    });
 
     if (searchInputs.length > 0) {
         applyFilters();
@@ -239,9 +326,10 @@
         }
     });
 
-    /* ---------------- Page views: Dashboard, Inbox, Team, Documents, Calendar ---------------- */
+    /* ---------------- Page views: Dashboard, Tasks, Inbox, Team, Documents, Calendar ---------------- */
     var pageViews = {
         dashboard: document.getElementById("page-dashboard"),
+        tasks: document.getElementById("page-tasks"),
         inbox: document.getElementById("page-inbox"),
         team: document.getElementById("page-team"),
         documents: document.getElementById("page-documents"),
@@ -251,6 +339,7 @@
     var breadcrumbTitle = document.getElementById("breadcrumbTitle");
     var titles = {
         dashboard: "Dashboard",
+        tasks: "My Tasks",
         inbox: "Inbox",
         team: "Team Members",
         documents: "Documents",
@@ -277,6 +366,11 @@
             nav_settings: "Settings",
             nav_logout: "Logout",
             btn_new_task: "+ New Task",
+            sp_title: "Weekly Progress",
+            sp_desc: "Stay consistent in completing your tasks.",
+            sp_create_task: "Create Task",
+            sp_tasks_of: "of",
+            sp_tasks: "tasks",
             btn_invite_member: "＋ Invite Member",
             btn_today: "Today",
             search_placeholder: "Search tasks (Cmd + K or Ctrl + K)...",
@@ -380,6 +474,7 @@
             stat_team_sub: "People in workspace",
             project_overview_title: "Project Overview",
             project_overview_sub: "Track work at every stage.",
+            my_tasks_sub: "Manage and track all your tasks across projects without distraction.",
             group_empty: "No tasks in this section yet.",
             filter_showing: "Currently showing status filter",
             filter_show_all: "Show all tasks",
@@ -392,7 +487,7 @@
             invite_rejected: "✕ Invitation Rejected",
             btn_view_task: "View Task →",
             modal_invite_title: "Invite team member",
-            modal_invite_sub: "Invite colleagues to collaborate on Group 1 workspace tasks.",
+            modal_invite_sub: "Invite colleagues to collaborate on workspace tasks.",
             modal_invite_choose_task: "Choose Task / Project",
             modal_invite_select_placeholder: "-- Select Task for Collaboration --",
             modal_invite_user: "User Email or Username",
@@ -407,6 +502,8 @@
             modal_doc_name: "Document Name",
             modal_doc_name_ph: "e.g., Project_Brief.pdf, Report.docx",
             modal_doc_or_upload: "Or Upload File",
+            choose_file: "Choose File",
+            no_file_chosen: "No file chosen",
             btn_save_doc: "Save Document",
             cal_select_month: "Select Month",
             cal_select_year: "Select Year",
@@ -433,6 +530,11 @@
             nav_settings: "Pengaturan",
             nav_logout: "Keluar",
             btn_new_task: "+ Tugas Baru",
+            sp_title: "Weekly Progress",
+            sp_desc: "Tetap konsisten menyelesaikan tugasmu.",
+            sp_create_task: "Buat Tugas",
+            sp_tasks_of: "dari",
+            sp_tasks: "tugas",
             btn_invite_member: "＋ Undang Anggota",
             btn_today: "Hari Ini",
             search_placeholder: "Cari tugas (Cmd + K atau Ctrl + K)...",
@@ -536,6 +638,7 @@
             stat_team_sub: "Orang di workspace",
             project_overview_title: "Ringkasan Proyek",
             project_overview_sub: "Lacak pekerjaan di setiap tahap.",
+            my_tasks_sub: "Lihat dan kelola seluruh tugas Anda tanpa gangguan diagram dan statistik.",
             group_empty: "Belum ada tugas di bagian ini.",
             filter_showing: "Sedang menampilkan filter status",
             filter_show_all: "Tampilkan semua tugas",
@@ -563,6 +666,8 @@
             modal_doc_name: "Nama Dokumen",
             modal_doc_name_ph: "Contoh: Project_Brief.pdf, Laporan.docx",
             modal_doc_or_upload: "Atau Unggah Berkas",
+            choose_file: "Pilih File",
+            no_file_chosen: "Tidak ada file yang dipilih",
             btn_save_doc: "Simpan Dokumen",
             cal_select_month: "Pilih Bulan",
             cal_select_year: "Pilih Tahun",
@@ -719,6 +824,8 @@
             modal_doc_name: "Название документа",
             modal_doc_name_ph: "например, Project_Brief.pdf, Report.docx",
             modal_doc_or_upload: "Или загрузите файл",
+            choose_file: "Выбрать файл",
+            no_file_chosen: "Файл не выбран",
             btn_save_doc: "Сохранить документ",
             cal_select_month: "Выберите месяц",
             cal_select_year: "Выберите год",
@@ -875,6 +982,8 @@
             modal_doc_name: "文档名称",
             modal_doc_name_ph: "例如：Project_Brief.pdf, Report.docx",
             modal_doc_or_upload: "或上传文件",
+            choose_file: "选择文件",
+            no_file_chosen: "未选择文件",
             btn_save_doc: "保存文档",
             cal_select_month: "选择月份",
             cal_select_year: "选择年份",
@@ -911,6 +1020,7 @@
 
         // Update all data-i18n elements
         document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            if (el.classList.contains("has-file")) return;
             var k = el.getAttribute("data-i18n");
             var val = t(k);
             if (val) {
@@ -1676,7 +1786,7 @@
                 e.preventDefault();
                 showPage(page);
                 if (history.pushState) {
-                    var url = page === "dashboard" ? "/" : "/?page=" + page;
+                    var url = page === "dashboard" ? "/" : (page === "tasks" ? "/tasks" : "/?page=" + page);
                     history.pushState(null, "", url);
                 }
             }
@@ -1686,7 +1796,9 @@
     try {
         var urlParams = new URLSearchParams(window.location.search);
         var pageParam = urlParams.get("page");
-        if (pageParam && pageViews[pageParam]) {
+        if (window.location.pathname === "/tasks") {
+            showPage("tasks");
+        } else if (pageParam && pageViews[pageParam]) {
             showPage(pageParam);
         } else if (window.location.hash) {
             var h = window.location.hash.replace("#", "");
@@ -1784,6 +1896,99 @@
             }
         });
     }
+
+    /* ---------------- Custom File Inputs ---------------- */
+    document.querySelectorAll(".custom-file-upload").forEach(function (wrap) {
+        var input = wrap.querySelector(".custom-file-native");
+        var status = wrap.querySelector(".custom-file-status");
+        var clearBtn = wrap.querySelector(".custom-file-clear");
+        if (!input || !status) return;
+
+        input.addEventListener("change", function () {
+            if (input.files && input.files.length > 0) {
+                status.textContent = input.files[0].name;
+                status.classList.add("has-file");
+                if (clearBtn) clearBtn.style.display = "inline-flex";
+
+                // Auto-fill document title input if currently empty
+                var form = wrap.closest("form");
+                if (form) {
+                    var docTitle = form.querySelector('input[name="document"]');
+                    if (docTitle && !docTitle.value.trim()) {
+                        docTitle.value = input.files[0].name;
+                    }
+                }
+            } else {
+                status.textContent = t("no_file_chosen");
+                status.classList.remove("has-file");
+                if (clearBtn) clearBtn.style.display = "none";
+            }
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                input.value = "";
+                status.textContent = t("no_file_chosen");
+                status.classList.remove("has-file");
+                clearBtn.style.display = "none";
+            });
+        }
+    });
+
+    /* ---------------- Add Friend Modal ---------------- */
+    var addFriendModal = document.getElementById("addFriendModal");
+    var closeAddFriendModalBtn = document.getElementById("closeAddFriendModalBtn");
+    var cancelAddFriendModalBtn = document.getElementById("cancelAddFriendModalBtn");
+
+    function openAddFriendModal() {
+        if (addFriendModal) {
+            addFriendModal.hidden = false;
+            var input = addFriendModal.querySelector('input[name="identifier"]');
+            if (input) {
+                setTimeout(function () { input.focus(); }, 60);
+            }
+        }
+    }
+
+    function closeAddFriendModal() {
+        if (addFriendModal) {
+            addFriendModal.hidden = true;
+        }
+    }
+
+    document.querySelectorAll(".open-add-friend-modal").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            openAddFriendModal();
+        });
+    });
+
+    if (closeAddFriendModalBtn) {
+        closeAddFriendModalBtn.addEventListener("click", closeAddFriendModal);
+    }
+    if (cancelAddFriendModalBtn) {
+        cancelAddFriendModalBtn.addEventListener("click", closeAddFriendModal);
+    }
+    if (addFriendModal) {
+        addFriendModal.addEventListener("click", function (e) {
+            if (e.target === addFriendModal) {
+                closeAddFriendModal();
+            }
+        });
+    }
+
+    // Global friend picker helper for collaboration inputs
+    window.selectFriendCollaborator = function (btn, inputName) {
+        var email = btn.getAttribute("data-email");
+        if (!email) return;
+        var container = btn.closest("form") || btn.closest(".input-group") || btn.closest(".buttons") || btn.closest(".modal-dialog") || document;
+        var input = container.querySelector('input[name="' + inputName + '"]') || document.querySelector('input[name="' + inputName + '"]') || document.querySelector('input[name="invitee"]') || document.querySelector('input[name="collaborator_email"]');
+        if (input) {
+            input.value = email;
+            input.focus();
+        }
+    };
 
     // Initialize application language
     setLanguage(currentLang);

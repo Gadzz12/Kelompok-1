@@ -19,13 +19,14 @@
             } catch (err) {}
         })();
     </script>
-    <link rel="stylesheet" href="/static/app.css">
+    <link rel="stylesheet" href="/static/app.css?v=20261028_04">
 </head>
 <body>
     <svg class="icon-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
         <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></g></symbol>
         <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke-width="2.4"/></g></symbol>
         <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="i-settings" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></g></symbol>
         <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></g></symbol>
         <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></g></symbol>
@@ -50,14 +51,13 @@
             <svg width="18" height="18"><use href="#i-menu"/></svg>
         </button>
 
-        <a class="brand" href="/" data-page="dashboard">
-            <span class="brand-mark window-app-icon">F</span>
-            <span class="brand-name">Flowspace</span>
+        <a class="brand" href="/" data-page="dashboard" title="Flowspace">
+            <img src="/static/logo.png?v=2" alt="Flowspace" class="brand-img">
         </a>
 
         <div class="top-search">
             <svg width="15" height="15"><use href="#i-search"/></svg>
-            <input id="globalSearch" type="search" placeholder="Quick Search..." aria-label="Cari tugas" data-task-search>
+            <input id="globalSearch" type="search" placeholder="Quick Search..." aria-label="Search tasks" data-task-search>
             <span class="kbd">⌘</span><span class="kbd">K</span>
         </div>
 
@@ -89,90 +89,130 @@
             <a class="top-icon" href="/settings" aria-label="Settings" title="Settings">
                 <svg width="17" height="17"><use href="#i-settings"/></svg>
             </a>
-            <a class="pill-btn" href="/todo/create">
-                <svg width="13" height="13"><use href="#i-plus"/></svg>
-                <span data-i18n="btn_new_task">+ New Task</span>
-            </a>
-            <div class="win-controls" aria-hidden="true">
-                <span class="wc wc-min"></span>
-                <span class="wc wc-max"></span>
-                <span class="wc wc-close"></span>
-            </div>
         </div>
     </header>
 
     <div class="scrim" id="sidebarScrim"></div>
 
     <div class="shell">
-        <aside class="sidebar">
-            <div class="workspace">
-                <div class="ws-avatar brand-mark user-avatar-container" id="sidebarAvatar">{{if .Avatar}}{{.Avatar}}{{else}}{{.Initial}}{{end}}</div>
-                <div class="ws-info">
-                    <strong>{{.Nama}}</strong>
-                    <small>{{.Email}}</small>
-                </div>
-                <button type="button" class="collapse-btn" id="sidebarCollapse" aria-label="Collapse sidebar" aria-expanded="true">
-                    <svg width="14" height="14"><use href="#i-chevron-left"/></svg>
-                </button>
+        <aside class="sidebar" id="appSidebar">
+            <!-- Brand logo row -->
+            <div class="sidebar-brand-row">
+                <a class="sidebar-brand" href="/" data-page="dashboard" title="Flowspace">
+                    <img src="/static/logo.png?v=2" alt="Flowspace" class="sidebar-brand-img">
+                    <span class="sidebar-brand-name">Flowspace</span>
+                </a>
             </div>
 
-            <nav aria-label="Main menu">
-                <p class="nav-label" data-i18n="main_menu">MAIN MENU</p>
-                <a class="nav-item{{if or (eq .ActivePage "dashboard") (eq .ActivePage "")}} active{{end}}" href="/" data-page="dashboard">
-                    <svg><use href="#i-grid"/></svg>
+            <!-- Navigation Items -->
+            <nav class="sidebar-nav" aria-label="Main menu">
+                <div class="sidebar-section-title">Main</div>
+
+                <a class="nav-item{{if or (eq .ActivePage "dashboard") (eq .ActivePage "")}} active{{end}}" href="/" data-page="dashboard" title="Dashboard">
+                    <span class="nav-icon"><svg><use href="#i-grid"/></svg></span>
                     <span class="nav-text" data-i18n="nav_dashboard">Dashboard</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item{{if eq .ActivePage "inbox"}} active{{end}}" href="/inbox" data-page="inbox">
-                    <svg><use href="#i-mail"/></svg>
-                    <span class="nav-text" data-i18n="nav_inbox">Inbox</span>
-                    <b class="nav-count{{if gt .UnreadInboxCount 0}} nav-count-alert{{end}}" id="inboxCount">{{.UnreadInboxCount}}</b>
-                </a>
-                <a class="nav-item{{if eq .ActivePage "team"}} active{{end}}" href="/team" data-page="team">
-                    <svg><use href="#i-users"/></svg>
-                    <span class="nav-text" data-i18n="nav_team">Team</span>
-                    <b class="nav-count" id="teamCount">{{.TeamCount}}</b>
-                </a>
-                <a class="nav-item" href="/#project-overview" data-page="dashboard">
-                    <svg><use href="#i-list"/></svg>
+
+                <a class="nav-item{{if eq .ActivePage "tasks"}} active{{end}}" href="/tasks" data-page="tasks" title="My Tasks">
+                    <span class="nav-icon"><svg><use href="#i-list"/></svg></span>
                     <span class="nav-text" data-i18n="nav_my_tasks">My Tasks</span>
                     <span class="nav-count">{{.TotalVisible}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
 
-                <p class="nav-label" data-i18n="workspace_label">WORKSPACE</p>
-                <a class="nav-item{{if eq .ActivePage "documents"}} active{{end}}" href="/documents" data-page="documents">
-                    <svg><use href="#i-doc"/></svg>
+                <a class="nav-item{{if eq .ActivePage "calendar"}} active{{end}}" href="/calendar" data-page="calendar" title="Calendar">
+                    <span class="nav-icon"><svg><use href="#i-calendar"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_calendar">Calendar</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
+                </a>
+
+                <a class="nav-item{{if eq .ActivePage "documents"}} active{{end}}" href="/documents" data-page="documents" title="Documents">
+                    <span class="nav-icon"><svg><use href="#i-doc"/></svg></span>
                     <span class="nav-text" data-i18n="nav_documents">Documents</span>
                     {{if .Documents}}<span class="nav-count">{{len .Documents}}</span>{{end}}
-                </a>
-                <a class="nav-item{{if eq .ActivePage "calendar"}} active{{end}}" href="/calendar" data-page="calendar">
-                    <svg><use href="#i-calendar"/></svg>
-                    <span class="nav-text" data-i18n="nav_calendar">Calendar</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
 
-                <p class="nav-label" data-i18n="project_status">PROJECT STATUS</p>
-                <a class="nav-item{{if eq .Filter "belum"}} active{{end}}" href="/?status=belum">
-                    <span class="dot dot-amber"></span>
+                <!-- Secondary items group: Team -->
+                <div class="sidebar-section-title">Team</div>
+
+                <a class="nav-item{{if eq .ActivePage "team"}} active{{end}}" href="/team" data-page="team" title="Members">
+                    <span class="nav-icon"><svg><use href="#i-users"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_team">Members</span>
+                    <span class="nav-count" id="teamCount">{{.TeamCount}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
+                </a>
+
+                <a class="nav-item{{if eq .ActivePage "inbox"}} active{{end}}" href="/inbox" data-page="inbox" title="Inbox">
+                    <span class="nav-icon"><svg><use href="#i-mail"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_inbox">Inbox</span>
+                    <span class="nav-count{{if gt .UnreadInboxCount 0}} nav-count-alert{{end}}" id="inboxCount">{{.UnreadInboxCount}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
+                </a>
+
+                <!-- Project status items -->
+                <div class="sidebar-section-title">Status</div>
+                <a class="nav-item{{if eq .Filter "belum"}} active{{end}}" href="/tasks?status=belum" title="Waiting">
+                    <span class="nav-icon"><span class="dot dot-amber"></span></span>
                     <span class="nav-text" data-i18n="status_pending">Waiting</span>
                     <span class="nav-count">{{.CountPending}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item{{if eq .Filter "sedang"}} active{{end}}" href="/?status=sedang">
-                    <span class="dot dot-purple"></span>
+                <a class="nav-item{{if eq .Filter "sedang"}} active{{end}}" href="/tasks?status=sedang" title="In Progress">
+                    <span class="nav-icon"><span class="dot dot-purple"></span></span>
                     <span class="nav-text" data-i18n="status_ongoing">In Progress</span>
                     <span class="nav-count">{{.CountOngoing}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item{{if eq .Filter "sudah"}} active{{end}}" href="/?status=sudah">
-                    <span class="dot dot-green"></span>
+                <a class="nav-item{{if eq .Filter "sudah"}} active{{end}}" href="/tasks?status=sudah" title="Completed">
+                    <span class="nav-icon"><span class="dot dot-green"></span></span>
                     <span class="nav-text" data-i18n="status_completed">Completed</span>
                     <span class="nav-count">{{.CountDone}}</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
+
+                <!-- Weekly Progress Card -->
+                <div class="sidebar-progress-card">
+                    <div class="sp-head">
+                        <svg class="sp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                        <span class="sp-title" data-i18n="sp_title">Weekly Progress</span>
+                    </div>
+                    <div class="sp-metrics">
+                        <span class="sp-percent">{{if .DonePercent}}{{.DonePercent}}{{else}}0{{end}}%</span>
+                        <span class="sp-count">{{.CountDone}} <span data-i18n="sp_tasks_of">dari</span> {{.TotalVisible}} <span data-i18n="sp_tasks">tugas</span></span>
+                    </div>
+                    <div class="sp-bar">
+                        <div class="sp-bar-fill" style="width: {{if .DonePercent}}{{.DonePercent}}{{else}}0{{end}}%;"></div>
+                    </div>
+                    <p class="sp-desc" data-i18n="sp_desc">Tetap konsisten menyelesaikan tugasmu.</p>
+                    <a href="/todo/create" class="sp-btn">
+                        <span class="sp-btn-plus">+</span>
+                        <span data-i18n="sp_create_task">Buat Tugas</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-divider"></div>
             </nav>
 
-            <div class="sidebar-card upgrade-card">
-                <div class="upgrade-icon">✦</div>
-                <strong data-i18n="sidebar_collab_title">Collaborative Workspace</strong>
-                <p data-i18n="sidebar_collab_desc">Invite team members and wait for approval (acc) via inbox.</p>
-                <button type="button" class="widget-btn open-invite-modal" style="width:100%;margin-top:6px" data-i18n="btn_invite_member">＋ Invite Member</button>
-            </div>
+            <!-- Workspace settings / Profile at bottom -->
+            <a href="/settings#avatar-builder" class="sidebar-workspace" title="Change Avatar & Profile Settings">
+                <div class="sw-avatar user-avatar-container" id="sidebarAvatar">
+                    {{if .Avatar}}{{.Avatar}}{{else}}{{.Initial}}{{end}}
+                </div>
+                <div class="sw-info">
+                    <strong class="sw-name">{{.Nama}}</strong>
+                    <span class="sw-sub">PRO company plan</span>
+                </div>
+                <div class="sw-arrows" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>
+                    </svg>
+                </div>
+            </a>
         </aside>
 
         <main class="content">
@@ -181,29 +221,7 @@
                     <span class="crumb-arrows">‹　›</span>
                     <a href="/" data-page="dashboard" data-i18n="main_menu_breadcrumb">Main Menu</a>
                     <span>/</span>
-                    <strong id="breadcrumbTitle">{{if eq .ActivePage "inbox"}}Inbox{{else if eq .ActivePage "team"}}Team Members{{else if eq .ActivePage "documents"}}Documents{{else if eq .ActivePage "calendar"}}Calendar{{else}}Dashboard{{end}}</strong>
-                </div>
-                <div class="content-tools">
-                    <a class="icon-btn nav-top-btn" href="/inbox" data-page="inbox" title="Inbox &amp; Notifications" aria-label="Inbox" data-i18n-title="inbox_title">
-                        <svg width="15" height="15"><use href="#i-mail"/></svg>
-                        {{if gt .UnreadInboxCount 0}}<span class="badge-dot"></span>{{end}}
-                    </a>
-                    <a class="icon-btn nav-top-btn" href="/documents" data-page="documents" title="Documents" aria-label="Documents" data-i18n-title="docs_title">
-                        <svg width="15" height="15"><use href="#i-doc"/></svg>
-                    </a>
-                    <a class="icon-btn nav-top-btn" href="/team" data-page="team" title="Team Members" aria-label="Team Members" data-i18n-title="team_title">
-                        <svg width="15" height="15"><use href="#i-users"/></svg>
-                    </a>
-                    <a class="icon-btn nav-top-btn" href="/calendar" data-page="calendar" title="Calendar" aria-label="Calendar" data-i18n-title="cal_title">
-                        <svg width="15" height="15"><use href="#i-calendar"/></svg>
-                    </a>
-                    <button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Toggle theme">
-                        <svg class="icon-moon" width="15" height="15"><use href="#i-moon"/></svg>
-                        <svg class="icon-sun" width="15" height="15"><use href="#i-sun"/></svg>
-                    </button>
-                    <a class="icon-btn" href="/settings" aria-label="Settings" title="Settings" data-i18n-title="nav_settings">
-                        <svg width="15" height="15"><use href="#i-settings"/></svg>
-                    </a>
+                    <strong id="breadcrumbTitle">{{if eq .ActivePage "tasks"}}My Tasks{{else if eq .ActivePage "inbox"}}Inbox{{else if eq .ActivePage "team"}}Team Members{{else if eq .ActivePage "documents"}}Documents{{else if eq .ActivePage "calendar"}}Calendar{{else}}Dashboard{{end}}</strong>
                 </div>
             </div>
 
@@ -397,6 +415,7 @@
                             <option value="medium" data-i18n="priority_medium">Medium Priority</option>
                             <option value="low" data-i18n="priority_low">Low Priority</option>
                         </select>
+                        <a class="secondary-btn" href="/tasks" data-page="tasks" style="padding:7px 12px;font-size:12px;text-decoration:none;"><span data-i18n="nav_my_tasks">My Tasks</span> →</a>
                         <a class="btn btn-primary" href="/todo/create" data-i18n="btn_new_task">+ New Task</a>
                     </div>
                 </div>
@@ -408,7 +427,7 @@
                             <span class="tag tag-todo">WAITING ({{.CountPending}})</span>
                             <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
                         </button>
-                        <a class="group-add" href="/todo/create" aria-label="Tambah tugas baru">+</a>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
                     </div>
                     <div class="group-body">
                         <div class="table-wrap">
@@ -449,9 +468,14 @@
                                         </td>
                                         <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
                                         <td class="cell-actions">
-                                            <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}">
-                                                <svg width="13" height="13"><use href="#i-arrow"/></svg>
-                                            </a>
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {{end}}
@@ -470,7 +494,7 @@
                             <span class="tag tag-progress">ON PROGRESS ({{.CountOngoing}})</span>
                             <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
                         </button>
-                        <a class="group-add" href="/todo/create" aria-label="Tambah tugas baru">+</a>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
                     </div>
                     <div class="group-body">
                         <div class="table-wrap">
@@ -511,9 +535,14 @@
                                         </td>
                                         <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
                                         <td class="cell-actions">
-                                            <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}">
-                                                <svg width="13" height="13"><use href="#i-arrow"/></svg>
-                                            </a>
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {{end}}
@@ -532,7 +561,7 @@
                             <span class="tag tag-done">COMPLETED ({{.CountDone}})</span>
                             <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
                         </button>
-                        <a class="group-add" href="/todo/create" aria-label="Tambah tugas baru">+</a>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
                     </div>
                     <div class="group-body">
                         <div class="table-wrap">
@@ -568,9 +597,14 @@
                                         </td>
                                         <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
                                         <td class="cell-actions">
-                                            <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}">
-                                                <svg width="13" height="13"><use href="#i-arrow"/></svg>
-                                            </a>
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {{end}}
@@ -588,6 +622,238 @@
                 </p>
                 {{end}}
             </section>
+            </section>
+
+            <!-- PAGE: MY TASKS -->
+            <section class="page-view{{if eq .ActivePage "tasks"}} active{{end}}" id="page-tasks">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow" data-i18n="workspace_label">WORKSPACE</span>
+                        <h1 data-i18n="nav_my_tasks">My Tasks</h1>
+                        <p class="muted" data-i18n="my_tasks_sub">Manage and track all your tasks across projects without distraction.</p>
+                    </div>
+                </div>
+
+                <div class="overview-head" style="margin-top:16px;margin-bottom:18px;">
+                    <div></div>
+                    <div class="overview-tools" style="width:100%;justify-content:space-between;margin-left:0;">
+                        <div class="mini-search" style="flex:1;max-width:320px;">
+                            <svg width="14" height="14"><use href="#i-search"/></svg>
+                            <input type="search" placeholder="Search tasks..." aria-label="Search tasks" data-i18n-placeholder="search_placeholder" data-task-search>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <select class="select" aria-label="Filter priority" data-priority-filter>
+                                <option value="" data-i18n="filter_all">All Priorities</option>
+                                <option value="high" data-i18n="priority_high">High Priority</option>
+                                <option value="medium" data-i18n="priority_medium">Medium Priority</option>
+                                <option value="low" data-i18n="priority_low">Low Priority</option>
+                            </select>
+                            <a class="btn btn-primary" href="/todo/create" data-i18n="btn_new_task">+ New Task</a>
+                        </div>
+                    </div>
+                </div>
+
+                {{if or (eq .Filter "") (eq .Filter "belum")}}
+                <section class="group">
+                    <div class="group-bar">
+                        <button type="button" class="group-toggle" aria-expanded="true">
+                            <span class="tag tag-todo">WAITING ({{.CountPending}})</span>
+                            <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
+                        </button>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
+                    </div>
+                    <div class="group-body">
+                        <div class="table-wrap">
+                            <table class="task-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="th_name">Task Name</th>
+                                        <th data-i18n="th_desc">Description</th>
+                                        <th data-i18n="th_deadline">Deadline</th>
+                                        <th data-i18n="th_team">Team</th>
+                                        <th data-i18n="th_priority">Priority</th>
+                                        <th data-i18n="th_actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .PendingTodos}}
+                                    <tr data-search="{{.Title}} {{.Description}}" data-priority="{{.PriorityClass}}">
+                                        <td class="cell-title">
+                                            <a href="/todo/detail?id={{.ID}}">{{.Title}}</a>
+                                            <small><span data-i18n="created_on">Created</span> {{.CreatedLabel}}</small>
+                                        </td>
+                                        <td class="cell-desc">{{if .Description}}{{.Description}}{{else}}—{{end}}</td>
+                                        <td class="cell-deadline">
+                                            <span class="deadline-text{{if .IsOverdue}} deadline-overdue{{end}}">{{.DeadlineLabel}}</span>
+                                            {{if .IsOverdue}}
+                                            <span class="tag-overdue" data-i18n="overdue_badge" data-test="⚠️ Terlewat" title="Overdue deadline">⚠️ Overdue</span>
+                                            {{end}}
+                                        </td>
+                                        <td class="cell-team">
+                                            {{if .Collaborators}}
+                                            <span class="mini-avatars">
+                                                {{range .CollaboratorInitials}}<span>{{.}}</span>{{end}}
+                                            </span>
+                                            <span class="team-count">{{len .Collaborators}} <span data-i18n="collaborators">collaborators</span></span>
+                                            {{else}}
+                                            <span class="team-count" style="margin-left:0" data-i18n="only_you">Only you</span>
+                                            {{end}}
+                                        </td>
+                                        <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
+                                        <td class="cell-actions">
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="group-empty js-group-empty"{{if .PendingTodos}} hidden{{end}} data-i18n="group_empty">No tasks in this section yet.</p>
+                    </div>
+                </section>
+                {{end}}
+
+                {{if or (eq .Filter "") (eq .Filter "sedang")}}
+                <section class="group">
+                    <div class="group-bar">
+                        <button type="button" class="group-toggle" aria-expanded="true">
+                            <span class="tag tag-progress">ON PROGRESS ({{.CountOngoing}})</span>
+                            <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
+                        </button>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
+                    </div>
+                    <div class="group-body">
+                        <div class="table-wrap">
+                            <table class="task-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="th_name">Task Name</th>
+                                        <th data-i18n="th_desc">Description</th>
+                                        <th data-i18n="th_deadline">Deadline</th>
+                                        <th data-i18n="th_team">Team</th>
+                                        <th data-i18n="th_priority">Priority</th>
+                                        <th data-i18n="th_actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .OngoingTodos}}
+                                    <tr data-search="{{.Title}} {{.Description}}" data-priority="{{.PriorityClass}}">
+                                        <td class="cell-title">
+                                            <a href="/todo/detail?id={{.ID}}">{{.Title}}</a>
+                                            <small><span data-i18n="created_on">Created</span> {{.CreatedLabel}}</small>
+                                        </td>
+                                        <td class="cell-desc">{{if .Description}}{{.Description}}{{else}}—{{end}}</td>
+                                        <td class="cell-deadline">
+                                            <span class="deadline-text{{if .IsOverdue}} deadline-overdue{{end}}">{{.DeadlineLabel}}</span>
+                                            {{if .IsOverdue}}
+                                            <span class="tag-overdue" data-i18n="overdue_badge" data-test="⚠️ Terlewat" title="Overdue deadline">⚠️ Overdue</span>
+                                            {{end}}
+                                        </td>
+                                        <td class="cell-team">
+                                            {{if .Collaborators}}
+                                            <span class="mini-avatars">
+                                                {{range .CollaboratorInitials}}<span>{{.}}</span>{{end}}
+                                            </span>
+                                            <span class="team-count">{{len .Collaborators}} <span data-i18n="collaborators">collaborators</span></span>
+                                            {{else}}
+                                            <span class="team-count" style="margin-left:0" data-i18n="only_you">Only you</span>
+                                            {{end}}
+                                        </td>
+                                        <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
+                                        <td class="cell-actions">
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="group-empty js-group-empty"{{if .OngoingTodos}} hidden{{end}} data-i18n="group_empty">No tasks in this section yet.</p>
+                    </div>
+                </section>
+                {{end}}
+
+                {{if or (eq .Filter "") (eq .Filter "sudah")}}
+                <section class="group">
+                    <div class="group-bar">
+                        <button type="button" class="group-toggle" aria-expanded="true">
+                            <span class="tag tag-done">COMPLETED ({{.CountDone}})</span>
+                            <svg class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
+                        </button>
+                        <a class="group-add" href="/todo/create" aria-label="Add new task">+</a>
+                    </div>
+                    <div class="group-body">
+                        <div class="table-wrap">
+                            <table class="task-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="th_name">Task Name</th>
+                                        <th data-i18n="th_desc">Description</th>
+                                        <th data-i18n="th_deadline">Deadline</th>
+                                        <th data-i18n="th_team">Team</th>
+                                        <th data-i18n="th_priority">Priority</th>
+                                        <th data-i18n="th_actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .DoneTodos}}
+                                    <tr data-search="{{.Title}} {{.Description}}" data-priority="{{.PriorityClass}}">
+                                        <td class="cell-title">
+                                            <a href="/todo/detail?id={{.ID}}">{{.Title}}</a>
+                                            <small><span data-i18n="created_on">Created</span> {{.CreatedLabel}}</small>
+                                        </td>
+                                        <td class="cell-desc">{{if .Description}}{{.Description}}{{else}}—{{end}}</td>
+                                        <td class="cell-deadline">{{.DeadlineLabel}}</td>
+                                        <td class="cell-team">
+                                            {{if .Collaborators}}
+                                            <span class="mini-avatars">
+                                                {{range .CollaboratorInitials}}<span>{{.}}</span>{{end}}
+                                            </span>
+                                            <span class="team-count">{{len .Collaborators}} <span data-i18n="collaborators">collaborators</span></span>
+                                            {{else}}
+                                            <span class="team-count" style="margin-left:0" data-i18n="only_you">Only you</span>
+                                            {{end}}
+                                        </td>
+                                        <td><span class="priority priority-{{.PriorityClass}}" data-i18n="priority_{{.PriorityClass}}">{{.Priority}}</span></td>
+                                        <td class="cell-actions">
+                                            <div style="display:inline-flex;align-items:center;gap:4px;">
+                                                <a class="row-link" href="/todo/edit?id={{.ID}}" aria-label="Edit {{.Title}}" title="Edit Project">
+                                                    <svg width="13" height="13"><use href="#i-edit"/></svg>
+                                                </a>
+                                                <a class="row-link" href="/todo/detail?id={{.ID}}" aria-label="Open detail {{.Title}}" title="View Details">
+                                                    <svg width="13" height="13"><use href="#i-arrow"/></svg>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="group-empty js-group-empty"{{if .DoneTodos}} hidden{{end}} data-i18n="group_empty">No tasks in this section yet.</p>
+                    </div>
+                </section>
+                {{end}}
+
+                {{if .Filter}}
+                <p class="group-empty" style="padding-bottom:14px">
+                    <span data-i18n="filter_showing">Currently showing status filter</span> <strong>{{.Filter}}</strong>. <a href="/tasks" data-page="tasks" data-i18n="filter_show_all">Show all tasks</a>.
+                </p>
+                {{end}}
             </section>
 
             <!-- PAGE: INBOX -->
@@ -664,35 +930,32 @@
                 <div class="page-heading">
                     <div>
                         <span class="eyebrow" data-i18n="workspace_label">WORKSPACE</span>
-                        <h1 data-i18n="team_title">Team Members</h1>
-                        <p class="muted" data-i18n="team_sub">People collaborating on workspace tasks and projects.</p>
+                        <h1>Team &amp; Friends</h1>
+                        <p class="muted">Manage your team friends list. Friends added here will automatically appear when adding collaborators to projects.</p>
                     </div>
-                    <button type="button" class="primary-btn open-invite-modal" data-i18n="btn_invite_member">＋ Invite Member</button>
+                    <button type="button" class="primary-btn open-add-friend-modal">＋ Add Friend</button>
                 </div>
 
                 <div class="team-grid" id="teamGrid">
-                    {{range .TeamMembers}}
+                    {{range .TeamFriends}}
                     <article class="member-card">
-                        <div class="member-avatar user-avatar-container">{{.Initial}}</div>
+                        <div class="member-avatar user-avatar-container">{{if .Avatar}}{{.Avatar}}{{else}}{{.Initial}}{{end}}</div>
                         <div class="member-info">
                             <strong>{{.Nama}}</strong>
-                            <small>{{.Email}}</small>
-                            <span class="role-pill role-{{.Status}} {{if eq .Role "Admin"}}role-admin{{else if or (eq .Role "Member") (eq .Role "Member (Pending)")}}role-member{{end}}">{{.Role}}</span>
-                            {{if .Projects}}
-                            <div class="member-projects">
-                                <small class="project-tag-caption" data-i18n="th_name">Tasks:</small>
-                                <div class="project-tags">
-                                    {{range .Projects}}<span class="project-tag">{{.}}</span>{{end}}
-                                </div>
-                            </div>
-                            {{end}}
+                            <small>{{.Email}} (@{{.Username}})</small>
+                            <span class="role-pill role-active" style="background:var(--green-soft);color:var(--green);border:1px solid var(--green);">Friend</span>
+                            <form method="POST" action="/friend/remove" style="margin-top:12px;margin-bottom:0;" onsubmit="return confirm('Remove {{.Nama}} from your team?');">
+                                <input type="hidden" name="friend_id" value="{{.ID}}">
+                                <button type="submit" class="secondary-btn small-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3);font-size:11px;padding:3px 9px;">✕ Remove Friend</button>
+                            </form>
                         </div>
                     </article>
                     {{else}}
                     <div class="inbox-empty" style="grid-column: 1 / -1;">
                         <div class="empty-icon">👥</div>
-                        <h3 data-i18n="team_empty_title">No Team Members Yet</h3>
-                        <p class="muted" data-i18n="team_empty_sub">Click '+ Invite Member' to invite collaborators to your tasks.</p>
+                        <h3>No Friends in Team Yet</h3>
+                        <p class="muted">Click '+ Add Friend' to add friends to your team by email or registered username.</p>
+                        <button type="button" class="primary-btn open-add-friend-modal" style="margin-top:12px;">＋ Add Friend</button>
                     </div>
                     {{end}}
                 </div>
@@ -854,7 +1117,28 @@
                         </label>
                         <label>
                             <span data-i18n="modal_invite_user">User Email or Username</span>
-                            <input type="text" name="invitee" required placeholder="name@example.com or registered username" data-i18n-placeholder="modal_invite_user_ph">
+                            {{if .TeamFriends}}
+                            <div class="friends-picker-section" style="margin-top:4px; margin-bottom:6px;">
+                                <small style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">Team Friends (click to select):</small>
+                                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                    {{range .TeamFriends}}
+                                    <button type="button" class="friend-pick-btn" data-email="{{.Email}}" onclick="selectFriendCollaborator(this, 'invitee')" title="Select {{.Nama}}">
+                                        <span class="chip-avatar">{{.Initial}}</span>
+                                        <span>{{.Nama}}</span>
+                                        <span class="chip-plus">＋</span>
+                                    </button>
+                                    {{end}}
+                                </div>
+                            </div>
+                            {{end}}
+                            <input type="text" name="invitee" required placeholder="name@example.com or registered username" data-i18n-placeholder="modal_invite_user_ph" list="teamFriendsListModal">
+                            {{if .TeamFriends}}
+                            <datalist id="teamFriendsListModal">
+                                {{range .TeamFriends}}
+                                <option value="{{.Email}}">{{.Nama}} (@{{.Username}})</option>
+                                {{end}}
+                            </datalist>
+                            {{end}}
                         </label>
                         <div class="form-note-box">
                             ℹ️ <strong data-i18n="modal_invite_flow_note">Collaboration Flow: Invitations will arrive in your colleague's Inbox. They must click Accept (ACC) before accessing the task.</strong>
@@ -862,6 +1146,33 @@
                         <div class="form-actions">
                             <button type="button" class="secondary-btn" id="cancelInviteModalBtn" data-i18n="btn_cancel">Cancel</button>
                             <button type="submit" class="primary-btn" data-i18n="btn_send_invite">＋ Send Invitation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL: ADD FRIEND -->
+            <div class="modal-backdrop" id="addFriendModal" hidden>
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <div class="welcome-mark">👥</div>
+                        <div>
+                            <h2>Add Friend to Team</h2>
+                            <p class="muted">Add colleagues by their registered email or username.</p>
+                        </div>
+                        <button type="button" class="modal-close" id="closeAddFriendModalBtn" aria-label="Close">×</button>
+                    </div>
+                    <form method="POST" action="/friend/add" class="app-form">
+                        <label>
+                            <span>Friend's Email or Username</span>
+                            <input type="text" name="identifier" required placeholder="e.g. colleague@example.com or username" autofocus>
+                        </label>
+                        <div class="form-note-box">
+                            ℹ️ <strong>Friends added to your team will automatically appear as selectable options whenever you assign collaborators to tasks.</strong>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="secondary-btn" id="cancelAddFriendModalBtn">Cancel</button>
+                            <button type="submit" class="primary-btn">＋ Add to Team</button>
                         </div>
                     </form>
                 </div>
@@ -895,7 +1206,12 @@
                         </label>
                         <label>
                             <span data-i18n="modal_doc_or_upload">Or Upload File</span>
-                            <input type="file" name="document_file">
+                            <div class="custom-file-upload">
+                                <input type="file" id="modal_document_file" name="document_file" class="custom-file-native">
+                                <label for="modal_document_file" class="custom-file-btn" data-i18n="choose_file">Choose File</label>
+                                <span class="custom-file-status" data-i18n="no_file_chosen">No file chosen</span>
+                                <button type="button" class="custom-file-clear" title="Remove file">✕</button>
+                            </div>
                         </label>
                         <div class="form-actions">
                             <button type="button" class="secondary-btn" id="cancelDocModalBtn" data-i18n="btn_cancel">Cancel</button>
@@ -911,6 +1227,6 @@
     <script>
         window.calendarEventsData = {{if .CalendarEventsJSON}}{{.CalendarEventsJSON}}{{else}}"[]"{{end}};
     </script>
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=20261028_04"></script>
 </body>
 </html>

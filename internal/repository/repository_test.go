@@ -135,6 +135,54 @@ func TestJSONRepositoryOperations(t *testing.T) {
 		t.Fatalf("Expected updated priority 'low', got %q", prioFetched.Priority)
 	}
 
+	// Test 10: Friend operations (AddFriend, GetFriends, RemoveFriend)
+	user2, err := repo.CreateUser(model.User{
+		Nama:     "Friend Two",
+		Username: "friend2",
+		Email:    "friend2@example.com",
+		Password: "password123",
+	})
+	if err != nil {
+		t.Fatalf("Failed to create user2: %v", err)
+	}
+
+	// Add user2 as friend of tester (ID 1)
+	addedFriend, err := repo.AddFriend(1, "friend2@example.com")
+	if err != nil || addedFriend.ID != user2.ID {
+		t.Fatalf("AddFriend failed: %v", err)
+	}
+
+	// Adding duplicate friend should error
+	_, err = repo.AddFriend(1, "friend2")
+	if err == nil {
+		t.Fatal("Expected error adding duplicate friend, got nil")
+	}
+
+	// Adding oneself should error
+	_, err = repo.AddFriend(1, "tester@example.com")
+	if err == nil {
+		t.Fatal("Expected error adding self as friend, got nil")
+	}
+
+	// GetFriends
+	friends, err := repo.GetFriends(1)
+	if err != nil || len(friends) != 1 {
+		t.Fatalf("GetFriends failed, expected 1 friend, got %d (err: %v)", len(friends), err)
+	}
+	if friends[0].Email != "friend2@example.com" {
+		t.Fatalf("Expected friend2@example.com, got %s", friends[0].Email)
+	}
+
+	// Remove friend
+	err = repo.RemoveFriend(1, user2.ID)
+	if err != nil {
+		t.Fatalf("RemoveFriend failed: %v", err)
+	}
+	friends, err = repo.GetFriends(1)
+	if err != nil || len(friends) != 0 {
+		t.Fatalf("Expected 0 friends after remove, got %d", len(friends))
+	}
+
 	// Cleanup verified by TempDir
 	_ = os.Remove(tempFile)
 }

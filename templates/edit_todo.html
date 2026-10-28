@@ -19,7 +19,7 @@
             } catch (err) {}
         })();
     </script>
-    <link rel="stylesheet" href="/static/app.css">
+    <link rel="stylesheet" href="/static/app.css?v=20261028_04">
     <style>
         .new-project-card {
             background: var(--surface);
@@ -28,6 +28,7 @@
             box-shadow: var(--shadow-sm);
             padding: 28px 32px;
             margin-bottom: 30px;
+            transition: background 0.2s, border-color 0.2s;
         }
 
         .project-form-grid {
@@ -98,7 +99,7 @@
             color: var(--text);
             font-size: 13px;
             box-sizing: border-box;
-            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s;
         }
 
         .form-control:focus {
@@ -106,6 +107,39 @@
             border-color: var(--primary);
             background: var(--surface);
             box-shadow: 0 0 0 3px rgba(240, 83, 51, 0.16);
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: auto;
+        }
+
+        select.form-control option {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        [data-theme="dark"] input[type="datetime-local"].form-control::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        input[type="file"].form-control {
+            color: var(--text);
+        }
+
+        input[type="file"].form-control::file-selector-button {
+            border: 1px solid var(--border);
+            background: var(--surface-muted);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        input[type="file"].form-control::file-selector-button:hover {
+            background: var(--border-strong);
         }
 
         textarea.form-control {
@@ -178,6 +212,57 @@
             color: var(--text);
         }
 
+        .attached-doc-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--surface-soft);
+            margin-bottom: 8px;
+        }
+
+        .attached-doc-card strong {
+            display: block;
+            font-size: 12.5px;
+            word-break: break-all;
+            color: var(--text);
+        }
+
+        .attached-doc-card small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .collab-chips-wrap {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .collab-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        .collab-role-tag {
+            font-size: 10px;
+            color: var(--blue);
+            background: var(--blue-soft);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
         .form-footer-actions {
             display: flex;
             align-items: center;
@@ -215,24 +300,6 @@
             color: #FFFFFF;
             box-shadow: 0 4px 12px rgba(192, 57, 43, 0.25);
         }
-
-        .existing-subtask-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface-soft);
-            margin-bottom: 6px;
-            font-size: 13px;
-        }
-
-        .existing-subtask-item.completed {
-            text-decoration: line-through;
-            color: var(--muted);
-            opacity: 0.8;
-        }
     </style>
 </head>
 <body>
@@ -240,6 +307,7 @@
         <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></g></symbol>
         <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke-width="2.4"/></g></symbol>
         <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g></symbol>
         <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></g></symbol>
         <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -258,9 +326,8 @@
             <svg width="18" height="18"><use href="#i-menu"/></svg>
         </button>
 
-        <a class="brand" href="/">
-            <span class="brand-mark" style="background:#27ae60;color:#fff;">F</span>
-            <span class="brand-name">Flowspace</span>
+        <a class="brand" href="/" title="Flowspace">
+            <img src="/static/logo.png?v=2" alt="Flowspace" class="brand-img">
         </a>
 
         <div class="top-search" role="search">
@@ -271,13 +338,13 @@
 
         <div class="top-actions">
             <select class="top-lang-select" id="headerLangSelect" data-lang-select aria-label="Change Language">
-                <option value="en">🇬🇧 EN</option>
+                <option value="en" selected>🇬🇧 EN</option>
                 <option value="id">🇮🇩 ID</option>
                 <option value="ru">🇷🇺 RU</option>
                 <option value="zh">🇨🇳 ZH</option>
             </select>
 
-            <button type="button" class="top-icon theme-toggle" data-theme-toggle aria-label="Toggle theme">
+            <button type="button" class="top-icon theme-toggle" data-theme-toggle aria-label="Toggle theme" title="Toggle theme">
                 <svg class="icon-moon" width="17" height="17"><use href="#i-moon"/></svg>
                 <svg class="icon-sun" width="17" height="17"><use href="#i-sun"/></svg>
             </button>
@@ -285,16 +352,6 @@
             <a class="top-icon" href="/settings" aria-label="Settings" title="Settings">
                 <svg width="17" height="17"><use href="#i-settings"/></svg>
             </a>
-
-            <a class="pill-btn" href="/" style="background:#fff;color:#181412;border-radius:999px;">
-                <span>← Dashboard</span>
-            </a>
-
-            <div class="win-controls" aria-hidden="true">
-                <span class="wc wc-min"></span>
-                <span class="wc wc-max"></span>
-                <span class="wc wc-close"></span>
-            </div>
         </div>
     </header>
 
@@ -302,117 +359,142 @@
 
     <div class="shell">
         <!-- Sidebar matching Dashboard -->
-        <aside class="sidebar">
-            <div class="workspace">
-                <div class="ws-avatar user-avatar-container">{{if .Avatar}}{{.Avatar}}{{else}}{{.Initial}}{{end}}</div>
-                <div class="ws-info">
-                    <strong>{{if .Nama}}{{.Nama}}{{else}}Kelompok 1{{end}}</strong>
-                    <small>{{if .Email}}{{.Email}}{{else}}admin@example.com{{end}}</small>
-                </div>
-                <button type="button" class="collapse-btn" id="sidebarCollapse" aria-label="Collapse sidebar" aria-expanded="true">
-                    <svg width="14" height="14"><use href="#i-chevron-left"/></svg>
-                </button>
+        <aside class="sidebar" id="appSidebar">
+            <!-- Brand logo row -->
+            <div class="sidebar-brand-row">
+                <a class="sidebar-brand" href="/" data-page="dashboard" title="Flowspace">
+                    <img src="/static/logo.png?v=2" alt="Flowspace" class="sidebar-brand-img">
+                    <span class="sidebar-brand-name">Flowspace</span>
+                </a>
             </div>
 
-            <nav aria-label="Main menu">
-                <p class="nav-label" data-i18n="main_menu">MAIN MENU</p>
-                <a class="nav-item" href="/">
-                    <svg><use href="#i-grid"/></svg>
+            <!-- Navigation Items -->
+            <nav class="sidebar-nav" aria-label="Main menu">
+                <div class="sidebar-section-title">Main</div>
+
+                <a class="nav-item" href="/" data-page="dashboard" title="Dashboard">
+                    <span class="nav-icon"><svg><use href="#i-grid"/></svg></span>
                     <span class="nav-text" data-i18n="nav_dashboard">Dashboard</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item" href="/#project-overview">
-                    <svg><use href="#i-list"/></svg>
+
+                <a class="nav-item" href="/tasks" data-page="tasks" title="My Tasks">
+                    <span class="nav-icon"><svg><use href="#i-list"/></svg></span>
                     <span class="nav-text" data-i18n="nav_my_tasks">My Tasks</span>
                     <span class="nav-count">{{.TotalVisible}}</span>
-                </a>
-                <a class="nav-item" href="/todo/create">
-                    <svg><use href="#i-plus"/></svg>
-                    <span class="nav-text" data-i18n="btn_new_task">+ New Project</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
 
-                <p class="nav-label" data-i18n="workspace_label">WORKSPACE</p>
-                <a class="nav-item" href="/inbox">
-                    <svg><use href="#i-mail"/></svg>
-                    <span class="nav-text" data-i18n="nav_inbox">Inbox</span>
-                    {{if gt .UnreadInboxCount 0}}<span class="nav-count" style="background:#e74c3c;color:#fff;">{{.UnreadInboxCount}}</span>{{end}}
-                </a>
-                <a class="nav-item" href="/documents">
-                    <svg><use href="#i-doc"/></svg>
-                    <span class="nav-text" data-i18n="nav_documents">Documents</span>
-                </a>
-                <a class="nav-item" href="/team">
-                    <svg><use href="#i-users"/></svg>
-                    <span class="nav-text" data-i18n="nav_team">Team Members</span>
-                </a>
-                <a class="nav-item" href="/calendar">
-                    <svg><use href="#i-calendar"/></svg>
+                <a class="nav-item" href="/calendar" data-page="calendar" title="Calendar">
+                    <span class="nav-icon"><svg><use href="#i-calendar"/></svg></span>
                     <span class="nav-text" data-i18n="nav_calendar">Calendar</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
 
-                <p class="nav-label" data-i18n="project_status">PROJECT STATUS</p>
-                <a class="nav-item" href="/?status=belum">
-                    <span class="dot dot-amber"></span>
-                    <span class="nav-text" data-i18n="status_pending">Waiting</span>
-                    <span class="nav-count">{{.CountPending}}</span>
+                <a class="nav-item" href="/documents" data-page="documents" title="Documents">
+                    <span class="nav-icon"><svg><use href="#i-doc"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_documents">Documents</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item" href="/?status=sedang">
-                    <span class="dot dot-purple"></span>
-                    <span class="nav-text" data-i18n="status_ongoing">In Progress</span>
-                    <span class="nav-count">{{.CountOngoing}}</span>
+
+                <!-- Secondary items group: Team -->
+                <div class="sidebar-section-title">Team</div>
+
+                <a class="nav-item" href="/team" data-page="team" title="Members">
+                    <span class="nav-icon"><svg><use href="#i-users"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_team">Members</span>
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
-                <a class="nav-item" href="/?status=sudah">
-                    <span class="dot dot-green"></span>
-                    <span class="nav-text" data-i18n="status_completed">Completed</span>
-                    <span class="nav-count">{{.CountDone}}</span>
+
+                <a class="nav-item" href="/inbox" data-page="inbox" title="Inbox">
+                    <span class="nav-icon"><svg><use href="#i-mail"/></svg></span>
+                    <span class="nav-text" data-i18n="nav_inbox">Inbox</span>
+                    {{if gt .UnreadInboxCount 0}}<span class="nav-count nav-count-alert">{{.UnreadInboxCount}}</span>{{end}}
+                    <span class="nav-active-bar" aria-hidden="true"></span>
                 </a>
+
+                <!-- Weekly Progress Card -->
+                <div class="sidebar-progress-card">
+                    <div class="sp-head">
+                        <svg class="sp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                        <span class="sp-title" data-i18n="sp_title">Weekly Progress</span>
+                    </div>
+                    <div class="sp-metrics">
+                        <span class="sp-percent">{{if .DonePercent}}{{.DonePercent}}{{else}}0{{end}}%</span>
+                        <span class="sp-count">{{.CountDone}} <span data-i18n="sp_tasks_of">dari</span> {{.TotalVisible}} <span data-i18n="sp_tasks">tugas</span></span>
+                    </div>
+                    <div class="sp-bar">
+                        <div class="sp-bar-fill" style="width: {{if .DonePercent}}{{.DonePercent}}{{else}}0{{end}}%;"></div>
+                    </div>
+                    <p class="sp-desc" data-i18n="sp_desc">Tetap konsisten menyelesaikan tugasmu.</p>
+                    <a href="/todo/create" class="sp-btn">
+                        <span class="sp-btn-plus">+</span>
+                        <span data-i18n="sp_create_task">Buat Tugas</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-divider"></div>
             </nav>
 
-            <div class="sidebar-card upgrade-card">
-                <div class="upgrade-icon">✦</div>
-                <strong data-i18n="sidebar_collab_title">Collaborative Workspace</strong>
-                <p data-i18n="sidebar_collab_desc">Invite team members and wait for approval (acc) via inbox.</p>
-                <a href="/team" class="widget-btn" style="display:inline-block;width:100%;text-decoration:none;margin-top:6px;box-sizing:border-box;" data-i18n="btn_invite_member">＋ Invite Member</a>
-            </div>
+            <!-- Workspace settings / Profile at bottom -->
+            <a href="/settings#avatar-builder" class="sidebar-workspace" title="Change Avatar & Profile Settings">
+                <div class="sw-avatar user-avatar-container" id="sidebarAvatar">
+                    {{if .Avatar}}{{.Avatar}}{{else}}{{.Initial}}{{end}}
+                </div>
+                <div class="sw-info">
+                    <strong class="sw-name">{{if .Nama}}{{.Nama}}{{else}}Flowspace User{{end}}</strong>
+                    <span class="sw-sub">PRO company plan</span>
+                </div>
+                <div class="sw-arrows" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>
+                    </svg>
+                </div>
+            </a>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Content Area (Layout matching Screenshot 2026-10-28 171015.png) -->
         <main class="content">
             <div class="content-bar">
                 <div class="breadcrumb">
                     <span class="crumb-arrows">‹　›</span>
                     <a href="/" data-i18n="main_menu_breadcrumb">Main Menu</a>
                     <span>/</span>
-                    <a href="/todo/detail?id={{.Todo.ID}}">Project Details</a>
-                    <span>/</span>
-                    <strong>Edit Project</strong>
-                </div>
-
-                <div class="content-tools">
-                    <button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Toggle theme">
-                        <svg class="icon-moon" width="15" height="15"><use href="#i-moon"/></svg>
-                        <svg class="icon-sun" width="15" height="15"><use href="#i-sun"/></svg>
-                    </button>
-                    <a class="icon-btn" href="/settings" aria-label="Settings" title="Settings" data-i18n-title="nav_settings">
-                        <svg width="15" height="15"><use href="#i-settings"/></svg>
-                    </a>
+                    <strong data-i18n="edit_task_crumb">Edit Task</strong>
                 </div>
             </div>
 
             <div class="page-head welcome-row">
                 <div class="page-title">
-                    <div class="ws-avatar user-avatar-container" style="width:44px;height:44px;border-radius:10px;font-size:18px;background:linear-gradient(135deg, #F05333 0%, #DE3717 100%);color:#fff;">✏️</div>
+                    <div class="ws-avatar user-avatar-container" style="width:44px;height:44px;border-radius:10px;font-size:18px;background:var(--primary);color:#fff;">
+                        {{if .Avatar}}{{.Avatar}}{{else}}😎{{end}}
+                    </div>
                     <div>
-                        <h1>Edit Project: {{.Todo.Title}}</h1>
-                        <p>Update project details, deadlines, priority levels, and milestones.</p>
+                        <h1>Edit Project</h1>
+                        <p>Set up project details, milestones, checklist items, and collaborate with your team.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Form Card matching Dashboard / New Project aesthetics -->
+            <!-- Form Card matching Screenshot 2026-10-28 171015.png -->
             <div class="new-project-card">
-                <form method="POST" action="/todo/edit?id={{.Todo.ID}}" id="projectForm">
+                {{if not .Todo.IsOwner}}
+                <div class="member-warning-banner" role="alert" style="margin-bottom: 24px; background: rgba(239, 68, 68, 0.1); border: 1.5px solid #ef4444; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; color: #ef4444;">
+                    <span style="font-size: 24px; line-height: 1;">⚠️</span>
+                    <div style="flex: 1;">
+                        <strong style="display: block; font-size: 15px; font-weight: 700; color: #ef4444; letter-spacing: 0.2px;" data-warning="you can`t change task">you can't change task</strong>
+                        <p style="margin: 3px 0 0; font-size: 12.5px; color: #dc2626;">You are viewing this project as a <strong>Member</strong> (View Only). You cannot edit or update any details of this task.</p>
+                    </div>
+                    <span style="background: #ef4444; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;">View Only</span>
+                </div>
+                {{end}}
+
+                <form method="POST" action="/todo/edit?id={{.Todo.ID}}" enctype="multipart/form-data" id="projectForm">
                     <div class="project-form-grid">
-                        <!-- Left Column: Primary Details -->
+                        <!-- Left Column: Project Information -->
                         <div>
                             <div class="form-section-title">
                                 <span class="step-num">1</span>
@@ -421,18 +503,18 @@
 
                             <div class="input-group">
                                 <label for="projectTitle">Project Name / Task Title *</label>
-                                <input type="text" id="projectTitle" name="title" class="form-control" value="{{.Todo.Title}}" required autofocus placeholder="Enter project title">
+                                <input type="text" id="projectTitle" name="title" class="form-control" value="{{.Todo.Title}}" placeholder="e.g. Redesign User Dashboard, Marketing Campaign Q4" {{if not .Todo.IsOwner}}disabled readonly{{else}}required autofocus{{end}}>
                                 <span class="field-hint">Give your project a clear, concise title so teammates can easily identify it.</span>
                             </div>
 
                             <div class="input-group">
-                                <label for="projectDesc">Description</label>
-                                <textarea id="projectDesc" name="description" class="form-control" rows="4" placeholder="Detail the objectives, requirements, and deliverables for this project...">{{.Todo.Description}}</textarea>
+                                <label for="projectDesc">Description (Optional)</label>
+                                <textarea id="projectDesc" name="description" class="form-control" rows="4" placeholder="Detail the objectives, requirements, and deliverables for this project..." {{if not .Todo.IsOwner}}disabled readonly{{end}}>{{.Todo.Description}}</textarea>
                             </div>
 
                             <div class="input-group">
                                 <label for="deadlineInput">Deadline (Date &amp; Time) *</label>
-                                <input type="datetime-local" id="deadlineInput" name="deadline" value="{{.Todo.Deadline}}" class="form-control" required>
+                                <input type="datetime-local" id="deadlineInput" name="deadline" value="{{.Todo.Deadline}}" class="form-control" {{if not .Todo.IsOwner}}disabled readonly{{else}}required{{end}}>
                                 
                                 <div id="deadlineWarning" style="display:none; color: #cf4c3c; background: var(--red-soft); border: 1px solid var(--red); border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 12.5px; font-weight: 500;">
                                     ⚠️ Warning: Deadline cannot be set in the past. Please choose a future date and time.
@@ -442,7 +524,7 @@
 
                             <div class="input-group">
                                 <label for="prioritySelect">Priority Level</label>
-                                <select id="prioritySelect" name="priority" class="form-control" style="cursor:pointer; appearance:auto;">
+                                <select id="prioritySelect" name="priority" class="form-control" {{if not .Todo.IsOwner}}disabled{{end}}>
                                     <option value="high" {{if or (eq .Todo.Priority "high") (eq .Todo.Priority "tinggi")}}selected{{end}}>🔴 High Priority</option>
                                     <option value="medium" {{if or (eq .Todo.Priority "medium") (eq .Todo.Priority "sedang") (eq .Todo.Priority "")}}selected{{end}}>🟡 Medium Priority</option>
                                     <option value="low" {{if or (eq .Todo.Priority "low") (eq .Todo.Priority "rendah")}}selected{{end}}>🟢 Low Priority</option>
@@ -452,89 +534,134 @@
 
                             <div class="input-group">
                                 <label for="statusSelect">Project Status</label>
-                                <select id="statusSelect" name="status" class="form-control" style="cursor:pointer; appearance:auto;">
-                                    <option value="belum" {{if eq .Todo.Status "belum"}}selected{{end}}>Waiting / To Do</option>
-                                    <option value="sedang" {{if eq .Todo.Status "sedang"}}selected{{end}}>In Progress</option>
-                                    <option value="sudah" {{if eq .Todo.Status "sudah"}}selected{{end}}>Completed</option>
+                                <select id="statusSelect" name="status" class="form-control" {{if not .Todo.IsOwner}}disabled{{end}}>
+                                    <option value="belum" {{if eq .Todo.Status "belum"}}selected{{end}}>⏳ Waiting / To Do</option>
+                                    <option value="sedang" {{if eq .Todo.Status "sedang"}}selected{{end}}>⚡ In Progress</option>
+                                    <option value="sudah" {{if eq .Todo.Status "sudah"}}selected{{end}}>✅ Completed</option>
                                 </select>
                                 <span class="field-hint">Update current progression status across workspace.</span>
                             </div>
                         </div>
 
-                        <!-- Right Column: Sub-Tasks, Documents, & Collaborators -->
+                        <!-- Right Column: Checklist & Collaboration -->
                         <div>
                             <div class="form-section-title">
                                 <span class="step-num">2</span>
-                                <span>Milestones &amp; Collaboration</span>
+                                <span>Checklist &amp; Collaboration</span>
                             </div>
 
-                            <!-- Existing Subtasks -->
+                            <!-- Subtasks checklist -->
                             <div class="input-group">
-                                <label>Current Milestones / Checklist Items</label>
-                                {{if .Todo.SubTodos}}
-                                    <div style="margin-bottom: 12px;">
+                                <label>Sub-Tasks / Milestones (Checklist)</label>
+                                <div id="subtasks-container">
+                                    {{if .Todo.SubTodos}}
                                         {{range .Todo.SubTodos}}
-                                            <div class="existing-subtask-item{{if .IsCompleted}} completed{{end}}">
-                                                <span>{{if .IsCompleted}}✓{{else}}○{{end}}</span>
-                                                <span style="flex:1;">{{.Title}}</span>
-                                                <small style="color:var(--muted);font-size:11px;">{{if .IsCompleted}}Done{{else}}Pending{{end}}</small>
+                                            <div class="subtask-row">
+                                                <input type="hidden" name="sub_ids" value="{{.ID}}">
+                                                <input type="text" name="sub_titles" class="form-control" value="{{.Title}}" placeholder="Milestone / sub-task" {{if not $.Todo.IsOwner}}disabled readonly{{end}}>
+                                                {{if $.Todo.IsOwner}}
+                                                <button type="button" class="btn-del-subtask" title="Remove" onclick="this.parentElement.remove()">✕</button>
+                                                {{end}}
                                             </div>
                                         {{end}}
-                                    </div>
-                                {{else}}
-                                    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">No milestones created yet.</p>
+                                    {{else}}
+                                        <div class="subtask-row">
+                                            <input type="hidden" name="sub_ids" value="0">
+                                            <input type="text" name="sub_titles" class="form-control" placeholder="Milestone 1: Research &amp; Wireframing" {{if not .Todo.IsOwner}}disabled readonly{{end}}>
+                                        </div>
+                                    {{end}}
+                                </div>
+                                {{if .Todo.IsOwner}}
+                                <button type="button" class="btn-add-subtask" onclick="addSubtask()">＋ Add Milestone / Sub-Task</button>
                                 {{end}}
-                                <a href="/todo/detail?id={{.Todo.ID}}" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;">Manage checklist item status in Detail View →</a>
                             </div>
 
-                            <!-- Document Attachment Info -->
-                            <div class="input-group" style="margin-top: 24px;">
-                                <label>Attached Document</label>
+                            <!-- Document Attachment -->
+                            <div class="input-group" style="margin-top: 20px;">
+                                <label>Document / Attachment (Optional)</label>
                                 {{if .Todo.Document}}
-                                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:var(--surface-soft);margin-bottom:8px;">
-                                        <span style="font-size:20px;">📄</span>
+                                    <div class="attached-doc-card">
+                                        <span style="font-size:18px;">📄</span>
                                         <div style="flex:1;min-width:0;">
-                                            <strong style="display:block;font-size:13px;word-break:break-all;">{{.Todo.Document}}</strong>
-                                            <small style="color:var(--muted);">Synced in Workspace &gt; Documents</small>
+                                            <strong>{{.Todo.Document}}</strong>
+                                            <small>Current attached document</small>
                                         </div>
                                     </div>
-                                {{else}}
-                                    <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">No document attached.</p>
                                 {{end}}
-                                <a href="/todo/detail?id={{.Todo.ID}}" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;">Upload new attachment in Detail View →</a>
+                                <input type="text" name="document" class="form-control" value="{{.Todo.Document}}" placeholder="Document Name (e.g. Brief.pdf, Specs.docx)" {{if not .Todo.IsOwner}}disabled readonly{{end}}>
+                                <div class="custom-file-upload" {{if not .Todo.IsOwner}}style="pointer-events:none;opacity:0.6;"{{end}}>
+                                    <input type="file" id="document_file" name="document_file" class="custom-file-native" {{if not .Todo.IsOwner}}disabled{{end}}>
+                                    <label for="document_file" class="custom-file-btn" data-i18n="choose_file">Choose File</label>
+                                    <span class="custom-file-status" id="document_file_status" data-i18n="no_file_chosen">No file chosen</span>
+                                    <button type="button" class="custom-file-clear" id="document_file_clear" title="Remove file">✕</button>
+                                </div>
+                                <span class="field-hint">📁 Uploaded documents will automatically sync with Workspace &gt; Documents.</span>
                             </div>
 
-                            <!-- Collaborator Info -->
-                            <div class="input-group" style="margin-top: 24px;">
-                                <label>Team Collaborators (Role: Member)</label>
+                            <!-- Collaborator -->
+                            <div class="input-group">
+                                <label>Collaborator Email / Username (Optional)</label>
                                 {{if .Todo.Collaborators}}
-                                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                                    <div class="collab-chips-wrap">
                                         {{range .Todo.Collaborators}}
-                                            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:var(--surface-soft);border:1px solid var(--border);font-size:12px;">
-                                                👤 {{.}} <span style="font-size:10px;color:#0369a1;background:#e0f2fe;padding:2px 6px;border-radius:8px;font-weight:700;">Member</span>
+                                            <span class="collab-chip">
+                                                👤 {{.}} <span class="collab-role-tag">Member</span>
                                             </span>
                                         {{end}}
                                     </div>
-                                {{else}}
-                                    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Only you (Admin). No members added yet.</p>
                                 {{end}}
+                                {{if and .Todo.IsOwner .TeamFriends}}
+                                <div class="friends-picker-section" style="margin-bottom: 8px;">
+                                    <small style="display:block; font-size:11.5px; color:var(--text-soft); margin-bottom:5px;">Select from your Team Friends:</small>
+                                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                        {{range .TeamFriends}}
+                                        <button type="button" class="friend-pick-btn" data-email="{{.Email}}" onclick="selectFriendCollaborator(this, 'collaborator_email')" title="Click to select {{.Nama}}">
+                                            <span class="chip-avatar">{{.Initial}}</span>
+                                            <span>{{.Nama}}</span>
+                                            <small style="opacity:0.8;">({{.Username}})</small>
+                                            <span class="chip-plus">＋</span>
+                                        </button>
+                                        {{end}}
+                                    </div>
+                                </div>
+                                {{end}}
+                                <input type="text" name="collaborator_email" class="form-control" placeholder="colleague@example.com or registered username" list="teamFriendsListEdit" {{if not .Todo.IsOwner}}disabled readonly{{end}}>
+                                {{if and .Todo.IsOwner .TeamFriends}}
+                                <datalist id="teamFriendsListEdit">
+                                    {{range .TeamFriends}}
+                                    <option value="{{.Email}}">{{.Nama}} (@{{.Username}})</option>
+                                    {{end}}
+                                </datalist>
+                                {{end}}
+                                
                                 <div class="form-info-box">
-                                    ℹ️ <strong>Role assignment:</strong> The project creator is <strong>Admin</strong> (full edit &amp; delete permissions). Invited teammates receive the <strong>Member</strong> role (view only).
+                                    ℹ️ <strong>Role assignment:</strong> You will be the <strong>Admin</strong> of this project. Invited collaborators receive the <strong>Member</strong> role (View Only). Once invited, they must click <strong>Accept (ACC)</strong> in their inbox to join.
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Footer Action Buttons -->
+                    <!-- Footer Action Buttons: Cancel and Edit Project -->
                     <div class="form-footer-actions">
                         <div>
+                            {{if .Todo.IsOwner}}
                             <a href="/todo/delete?id={{.Todo.ID}}" class="btn-delete-link" onclick="return confirm('Are you sure you want to delete this project?');">
                                 🗑 Delete Project
                             </a>
+                            {{end}}
                         </div>
                         <div class="footer-action-right">
-                            <a class="btn btn-ghost" href="/todo/detail?id={{.Todo.ID}}">← Cancel</a>
-                            <button type="submit" class="btn btn-primary" id="submitProjectBtn">✓ Update Project</button>
+                            {{if not .Todo.IsOwner}}
+                            <span style="color:#ef4444; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">⚠️ you can&#39;t change task</span>
+                            {{end}}
+                            <a class="btn btn-ghost" href="/todo/detail?id={{.Todo.ID}}">— Cancel</a>
+                            {{if .Todo.IsOwner}}
+                            <button type="submit" class="btn btn-primary" id="submitProjectBtn">✓ Edit Project</button>
+                            {{else}}
+                            <button type="button" class="btn" id="submitProjectBtn" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1.5px solid #ef4444; cursor: not-allowed; pointer-events: none; opacity: 0.95; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" disabled aria-disabled="true" title="Edit Project (Admin Only)">
+                                🔒 Edit Project (Admin Only)
+                            </button>
+                            {{end}}
                         </div>
                     </div>
                 </form>
@@ -542,7 +669,7 @@
         </main>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=20261028_04"></script>
     <script>
         const deadlineInput = document.getElementById('deadlineInput');
         const deadlineWarning = document.getElementById('deadlineWarning');
@@ -565,19 +692,33 @@
             });
         }
 
+        const isOwner = {{if .Todo.IsOwner}}true{{else}}false{{end}};
         const projectForm = document.getElementById('projectForm');
         if (projectForm) {
             projectForm.addEventListener('submit', function(e) {
+                if (!isOwner) {
+                    e.preventDefault();
+                    alert("you can't change task");
+                    return false;
+                }
                 const currentNow = formatNowLocal();
                 const statusSelect = document.getElementById('statusSelect');
                 if (statusSelect && statusSelect.value !== 'sudah') {
-                    if (deadlineInput.value && deadlineInput.value !== initialDeadline && deadlineInput.value < currentNow) {
+                    if (deadlineInput && deadlineInput.value && deadlineInput.value !== initialDeadline && deadlineInput.value < currentNow) {
                         deadlineWarning.style.display = 'block';
                         alert('Warning: Deadline date cannot be in the past! Please select an upcoming date and time.');
                         e.preventDefault();
                     }
                 }
             });
+        }
+
+        function addSubtask() {
+            const container = document.getElementById('subtasks-container');
+            const div = document.createElement('div');
+            div.className = 'subtask-row';
+            div.innerHTML = '<input type="hidden" name="sub_ids" value="0"><input type="text" name="sub_titles" class="form-control" placeholder="New milestone / sub-task"><button type="button" class="btn-del-subtask" title="Remove" onclick="this.parentElement.remove()">✕</button>';
+            container.appendChild(div);
         }
     </script>
 </body>

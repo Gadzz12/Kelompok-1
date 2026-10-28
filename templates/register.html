@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Akun - Workspace Kelompok 1</title>
+    <title>Sign Up - Flowspace Workspace</title>
     <style>
         :root {
             --primary: #F05333;
@@ -190,8 +190,8 @@
     <div class="window">
         <div class="titlebar">
             <div class="titlebar-brand">
-                <span class="brand-mark">K1</span>
-                <strong>Kelompok 1</strong>
+                <img src="/static/logo.png?v=2" alt="Flowspace" style="width:28px;height:28px;object-fit:contain;border-radius:6px;flex:none;">
+                <strong>Flowspace</strong>
             </div>
             <div class="window-controls">
                 <span class="wc"></span>
@@ -201,26 +201,26 @@
         </div>
         <div class="panel">
             <div class="form-eyebrow">WORKSPACE REGISTRATION</div>
-            <h1>Buat Akun Baru</h1>
-            <p class="sub">Daftarkan akun untuk mulai berkolaborasi pada proyek tim.</p>
+            <h1>Create New Account</h1>
+            <p class="sub">Register an account to start collaborating on team projects.</p>
 
             <form method="POST" action="/register">
-                <label>Nama Lengkap</label>
-                <input type="text" name="nama" placeholder="Contoh: Muhammad Yusril" required>
+                <label>Full Name</label>
+                <input type="text" name="nama" placeholder="e.g. John Doe" required>
 
                 <label>Username</label>
-                <input type="text" name="username" placeholder="username_kamu" required>
+                <input type="text" name="username" placeholder="your_username" required>
 
-                <label>Email</label>
-                <input type="email" name="email" placeholder="nama@example.com" required>
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="name@example.com" required>
 
                 <label>Password</label>
                 <input type="password" name="password" placeholder="••••••••" required>
 
-                <button type="submit" class="submit">Daftar Akun Baru →</button>
+                <button type="submit" class="submit">Create New Account →</button>
             </form>
 
-            <p class="switch">Sudah punya akun? <a href="/login">Masuk di sini</a></p>
+            <p class="switch">Already have an account? <a href="/login">Sign in here</a></p>
         </div>
     </div>
 </body>

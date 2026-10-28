@@ -84,6 +84,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.Collaborator{},
 		&model.Invitation{},
 		&model.InboxMessage{},
+		&model.Friend{},
 	)
 }
 

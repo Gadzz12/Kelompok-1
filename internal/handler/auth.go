@@ -47,7 +47,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	data := loginPageData{}
 	if r.URL.Query().Get("error") != "" {
-		data.Error = "Username/email atau password salah. Silakan coba lagi."
+		data.Error = "Invalid username/email or password. Please try again."
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "login.html", data); err != nil {
@@ -64,12 +64,12 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		if nama == "" || username == "" || password == "" || !emailIsValid(email) {
-			http.Error(w, "Data registrasi tidak valid", http.StatusBadRequest)
+			http.Error(w, "Invalid registration data", http.StatusBadRequest)
 			return
 		}
 
 		if h.repo.UserExists(username, email) {
-			http.Error(w, "Username atau email sudah terdaftar", http.StatusBadRequest)
+			http.Error(w, "Username or email is already registered", http.StatusBadRequest)
 			return
 		}
 
@@ -81,7 +81,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if _, err := h.repo.CreateUser(newUser); err != nil {
-			http.Error(w, "Gagal menyimpan akun pengguna", http.StatusInternalServerError)
+			http.Error(w, "Failed to save user account", http.StatusInternalServerError)
 			return
 		}
 

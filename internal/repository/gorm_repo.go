@@ -295,6 +295,81 @@ func (r *GORMRepository) ToggleSubTodo(todoID int, subID int, userID int) error 
 	return r.db.Save(&todo).Error
 }
 
+func (r *GORMRepository) SyncSubTodos(todoID int, userID int, subIDs []int, subTitles []string) error {
+	var todo model.Todo
+	if err := r.db.First(&todo, todoID).Error; err != nil {
+		return errors.New("tugas tidak ditemukan")
+	}
+
+	if todo.UserID != userID {
+		return errors.New("hanya admin yang dapat merubah project")
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var existingSubs []model.SubTodo
+		tx.Where("todo_id = ?", todoID).Find(&existingSubs)
+
+		keptIDs := make(map[int]bool)
+
+		for i, title := range subTitles {
+			title = strings.TrimSpace(title)
+			if title == "" {
+				continue
+			}
+
+			subID := 0
+			if i < len(subIDs) {
+				subID = subIDs[i]
+			}
+
+			if subID > 0 {
+				var sub model.SubTodo
+				if err := tx.Where("id = ? AND todo_id = ?", subID, todoID).First(&sub).Error; err == nil {
+					sub.Title = title
+					if err := tx.Save(&sub).Error; err != nil {
+						return err
+					}
+					keptIDs[subID] = true
+					continue
+				}
+			}
+
+			newSub := model.SubTodo{
+				TodoID:      todoID,
+				Title:       title,
+				IsCompleted: false,
+			}
+			if err := tx.Create(&newSub).Error; err != nil {
+				return err
+			}
+			keptIDs[newSub.ID] = true
+		}
+
+		for _, s := range existingSubs {
+			if !keptIDs[s.ID] {
+				tx.Delete(&s)
+			}
+		}
+
+		var allSubs []model.SubTodo
+		tx.Where("todo_id = ?", todoID).Find(&allSubs)
+		total := len(allSubs)
+		completed := 0
+		for _, s := range allSubs {
+			if s.IsCompleted {
+				completed++
+			}
+		}
+		if total > 0 {
+			todo.Progress = completed * 100 / total
+		} else {
+			todo.Progress = 0
+		}
+
+		return tx.Save(&todo).Error
+	})
+}
+
 func (r *GORMRepository) UpdateTodoStatus(todoID int, status string, userID int) error {
 	if status != "belum" && status != "sedang" && status != "sudah" {
 		return errors.New("status tidak valid")
@@ -761,4 +836,86 @@ func (r *GORMRepository) UpdateUserPreferences(userID int, avatar, language stri
 
 func (r *GORMRepository) CalculateStats(todos []model.Todo) (countDone, countOngoing, countPending, total, donePercent, ongoingPercent, pendingPercent, ongoingEndPercent int) {
 	return CalculateStats(todos)
+}
+
+
+// AddFriend menambahkan teman ke daftar Team berdasarkan username atau email
+func (r *GORMRepository) AddFriend(userID int, friendIdentifier string) (*model.User, error) {
+	friendIdentifier = strings.TrimSpace(friendIdentifier)
+	if friendIdentifier == "" {
+		return nil, errors.New("Please enter a valid email or username.")
+	}
+
+	var friendUser model.User
+	err := r.db.Where("LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)", friendIdentifier, friendIdentifier).First(&friendUser).Error
+	if err != nil {
+		return nil, fmt.Errorf("User '%s' was not found. Please ensure they have registered.", friendIdentifier)
+	}
+
+	if friendUser.ID == userID {
+		return nil, errors.New("You cannot add yourself as a friend.")
+	}
+
+	var count int64
+	r.db.Model(&model.Friend{}).Where("user_id = ? AND friend_id = ?", userID, friendUser.ID).Count(&count)
+	if count > 0 {
+		return nil, fmt.Errorf("'%s' is already in your team.", friendUser.Nama)
+	}
+
+	nowStr := time.Now().Format("2006-01-02 15:04:05")
+	f := model.Friend{
+		UserID:    userID,
+		FriendID:  friendUser.ID,
+		CreatedAt: nowStr,
+	}
+	if err := r.db.Create(&f).Error; err != nil {
+		return nil, err
+	}
+	return &friendUser, nil
+}
+
+// GetFriends mengembalikan daftar teman yang dimiliki oleh user
+func (r *GORMRepository) GetFriends(userID int) ([]model.FriendUser, error) {
+	var friends []model.Friend
+	if err := r.db.Where("user_id = ?", userID).Find(&friends).Error; err != nil {
+		return nil, err
+	}
+
+	if len(friends) == 0 {
+		return []model.FriendUser{}, nil
+	}
+
+	var friendIDs []int
+	for _, f := range friends {
+		friendIDs = append(friendIDs, f.FriendID)
+	}
+
+	var users []model.User
+	if err := r.db.Where("id IN ?", friendIDs).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	var result []model.FriendUser
+	for _, u := range users {
+		init := "U"
+		if len(u.Nama) > 0 {
+			init = strings.ToUpper(string([]rune(u.Nama)[0]))
+		} else if len(u.Username) > 0 {
+			init = strings.ToUpper(string([]rune(u.Username)[0]))
+		}
+		result = append(result, model.FriendUser{
+			ID:       u.ID,
+			Nama:     u.Nama,
+			Username: u.Username,
+			Email:    u.Email,
+			Initial:  init,
+			Avatar:   u.Avatar,
+		})
+	}
+	return result, nil
+}
+
+// RemoveFriend menghapus teman dari daftar Team
+func (r *GORMRepository) RemoveFriend(userID int, friendID int) error {
+	return r.db.Where("user_id = ? AND friend_id = ?", userID, friendID).Delete(&model.Friend{}).Error
 }

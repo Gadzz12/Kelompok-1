@@ -70,6 +70,24 @@ type TeamMember struct {
 	Status   string   `json:"status"`   // "active", "pending"
 }
 
+// Friend merepresentasikan relasi pertemanan antar pengguna
+type Friend struct {
+	ID        int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserID    int    `json:"user_id" gorm:"index;not null"`
+	FriendID  int    `json:"friend_id" gorm:"index;not null"`
+	CreatedAt string `json:"created_at,omitempty" gorm:"size:50"`
+}
+
+// FriendUser merepresentasikan data profil teman untuk tampilan UI
+type FriendUser struct {
+	ID       int    `json:"id"`
+	Nama     string `json:"nama"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Initial  string `json:"initial"`
+	Avatar   string `json:"avatar,omitempty"`
+}
+
 // TodoSimple adalah representasi ringkas Todo untuk dropdown pemilihan tugas saat invite
 type TodoSimple struct {
 	ID    int    `json:"id"`
@@ -126,6 +144,7 @@ type Todo struct {
 	OwnerEmail         string         `json:"owner_email,omitempty" gorm:"-"`
 	UserRole           string         `json:"user_role,omitempty" gorm:"-"` // "Admin" atau "Member"
 	IsOverdue          bool           `json:"is_overdue,omitempty" gorm:"-"`
+	TeamFriends        []FriendUser   `json:"team_friends,omitempty" gorm:"-"`
 }
 
 // DataStore struktur JSON untuk file data.json
@@ -136,6 +155,7 @@ type DataStore struct {
 	Collaborators []Collaborator `json:"collaborators"`
 	Invitations   []Invitation   `json:"invitations"`
 	InboxMessages []InboxMessage `json:"inbox_messages"`
+	Friends       []Friend       `json:"friends"`
 }
 
 // TodoItem adalah data tugas yang sudah dilengkapi label tampilan
@@ -186,6 +206,7 @@ type DashboardData struct {
 	FlashMessage       string
 	FlashError         string
 	Todo               Todo
+	TeamFriends        []FriendUser
 }
 
 // SettingsData data yang dikirim ke template settings.html
@@ -201,4 +222,5 @@ type SettingsData struct {
 	CountPending int
 	CountOngoing int
 	CountDone    int
+	DonePercent  int
 }

@@ -41,6 +41,7 @@ func (r *JSONRepository) loadData() model.DataStore {
 				Collaborators: []model.Collaborator{},
 				Invitations:   []model.Invitation{},
 				InboxMessages: []model.InboxMessage{},
+				Friends:       []model.Friend{},
 			}
 			r.saveDataLocked(data)
 			return data
@@ -72,6 +73,9 @@ func (r *JSONRepository) loadData() model.DataStore {
 	}
 	if data.InboxMessages == nil {
 		data.InboxMessages = []model.InboxMessage{}
+	}
+	if data.Friends == nil {
+		data.Friends = []model.Friend{}
 	}
 
 	return data
@@ -480,6 +484,99 @@ func (r *JSONRepository) ToggleSubTodo(todoID int, subID int, userID int) error 
 			} else {
 				data.Todos[i].Status = "belum"
 				data.Todos[i].CompletedAt = ""
+			}
+			break
+		}
+	}
+
+	r.saveData(data)
+	return nil
+}
+
+func (r *JSONRepository) SyncSubTodos(todoID int, userID int, subIDs []int, subTitles []string) error {
+	data := r.loadData()
+
+	foundTodo := false
+	for _, t := range data.Todos {
+		if t.ID == todoID {
+			if t.UserID != userID {
+				return errors.New("hanya admin yang dapat merubah project")
+			}
+			foundTodo = true
+			break
+		}
+	}
+	if !foundTodo {
+		return errors.New("tugas tidak ditemukan")
+	}
+
+	nextSubID := 1
+	for _, s := range data.SubTodos {
+		if s.ID >= nextSubID {
+			nextSubID = s.ID + 1
+		}
+	}
+
+	var otherSubs []model.SubTodo
+	for _, s := range data.SubTodos {
+		if s.TodoID != todoID {
+			otherSubs = append(otherSubs, s)
+		}
+	}
+
+	var currentSubs []model.SubTodo
+	for _, s := range data.SubTodos {
+		if s.TodoID == todoID {
+			currentSubs = append(currentSubs, s)
+		}
+	}
+
+	var newSubs []model.SubTodo
+	for i, title := range subTitles {
+		title = strings.TrimSpace(title)
+		if title == "" {
+			continue
+		}
+		subID := 0
+		if i < len(subIDs) {
+			subID = subIDs[i]
+		}
+		isComp := false
+		if subID > 0 {
+			for _, s := range currentSubs {
+				if s.ID == subID {
+					isComp = s.IsCompleted
+					break
+				}
+			}
+		} else {
+			subID = nextSubID
+			nextSubID++
+		}
+		newSubs = append(newSubs, model.SubTodo{
+			ID:          subID,
+			TodoID:      todoID,
+			Title:       title,
+			IsCompleted: isComp,
+		})
+	}
+	data.SubTodos = append(otherSubs, newSubs...)
+
+	total, completed := 0, 0
+	for _, sub := range data.SubTodos {
+		if sub.TodoID == todoID {
+			total++
+			if sub.IsCompleted {
+				completed++
+			}
+		}
+	}
+	for i := range data.Todos {
+		if data.Todos[i].ID == todoID {
+			if total > 0 {
+				data.Todos[i].Progress = completed * 100 / total
+			} else {
+				data.Todos[i].Progress = 0
 			}
 			break
 		}
@@ -1046,6 +1143,101 @@ func (r *JSONRepository) UpdateUserPreferences(userID int, avatar, language stri
 
 func (r *JSONRepository) CalculateStats(todos []model.Todo) (countDone, countOngoing, countPending, total, donePercent, ongoingPercent, pendingPercent, ongoingEndPercent int) {
 	return CalculateStats(todos)
+}
+
+// AddFriend menambahkan teman ke daftar Team berdasarkan username atau email
+func (r *JSONRepository) AddFriend(userID int, friendIdentifier string) (*model.User, error) {
+	data := r.loadData()
+	friendIdentifier = strings.TrimSpace(friendIdentifier)
+	if friendIdentifier == "" {
+		return nil, errors.New("Please enter a valid email or username.")
+	}
+
+	var friendUser *model.User
+	for i := range data.Users {
+		if strings.EqualFold(data.Users[i].Email, friendIdentifier) || strings.EqualFold(data.Users[i].Username, friendIdentifier) {
+			friendUser = &data.Users[i]
+			break
+		}
+	}
+	if friendUser == nil {
+		return nil, fmt.Errorf("User '%s' was not found. Please ensure they have registered.", friendIdentifier)
+	}
+
+	if friendUser.ID == userID {
+		return nil, errors.New("You cannot add yourself as a friend.")
+	}
+
+	for _, f := range data.Friends {
+		if f.UserID == userID && f.FriendID == friendUser.ID {
+			return nil, fmt.Errorf("'%s' is already in your team.", friendUser.Nama)
+		}
+	}
+
+	nextID := 1
+	for _, f := range data.Friends {
+		if f.ID >= nextID {
+			nextID = f.ID + 1
+		}
+	}
+
+	nowStr := time.Now().Format("2006-01-02 15:04:05")
+	data.Friends = append(data.Friends, model.Friend{
+		ID:        nextID,
+		UserID:    userID,
+		FriendID:  friendUser.ID,
+		CreatedAt: nowStr,
+	})
+
+	r.saveData(data)
+	return friendUser, nil
+}
+
+// GetFriends mengembalikan daftar teman yang dimiliki oleh user
+func (r *JSONRepository) GetFriends(userID int) ([]model.FriendUser, error) {
+	data := r.loadData()
+	userMap := make(map[int]model.User)
+	for _, u := range data.Users {
+		userMap[u.ID] = u
+	}
+
+	var friends []model.FriendUser
+	for _, f := range data.Friends {
+		if f.UserID == userID {
+			if u, ok := userMap[f.FriendID]; ok {
+				init := "U"
+				if len(u.Nama) > 0 {
+					init = strings.ToUpper(string([]rune(u.Nama)[0]))
+				} else if len(u.Username) > 0 {
+					init = strings.ToUpper(string([]rune(u.Username)[0]))
+				}
+				friends = append(friends, model.FriendUser{
+					ID:       u.ID,
+					Nama:     u.Nama,
+					Username: u.Username,
+					Email:    u.Email,
+					Initial:  init,
+					Avatar:   u.Avatar,
+				})
+			}
+		}
+	}
+	return friends, nil
+}
+
+// RemoveFriend menghapus teman dari daftar Team
+func (r *JSONRepository) RemoveFriend(userID int, friendID int) error {
+	data := r.loadData()
+	var newFriends []model.Friend
+	for _, f := range data.Friends {
+		if f.UserID == userID && f.FriendID == friendID {
+			continue
+		}
+		newFriends = append(newFriends, f)
+	}
+	data.Friends = newFriends
+	r.saveData(data)
+	return nil
 }
 
 func emailIsValid(email string) bool {

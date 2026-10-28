@@ -49,7 +49,7 @@ func isDeadlineOverdue(deadlineStr string) bool {
 
 // Dashboard menampilkan daftar tugas dan grafik statistik
 func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/" && r.URL.Path != "/tasks" {
 		http.NotFound(w, r)
 		return
 	}
@@ -174,19 +174,22 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	activePage := strings.TrimSpace(r.URL.Query().Get("page"))
 	if activePage == "" {
-		activePage = "dashboard"
+		if r.URL.Path == "/tasks" {
+			activePage = "tasks"
+		} else {
+			activePage = "dashboard"
+		}
 	}
 
 	unreadInbox, _ := h.repo.GetUnreadInboxCount(user.Email)
 	inboxMessages, _ := h.repo.GetInboxMessages(user.Email)
 	teamMembers, _ := h.repo.GetTeamMembers(user.Email)
+	teamFriends, _ := h.repo.GetFriends(userID)
 	simpleTodos, _ := h.repo.GetUserSimpleTodos(userID, user.Email)
 	flashMsg := r.URL.Query().Get("msg")
 	flashErr := r.URL.Query().Get("error")
 
-	if len(teamMembers) > 0 {
-		teamCount = len(teamMembers)
-	}
+	teamCount = len(teamFriends)
 
 	// Kumpulkan dokumen dari seluruh tugas yang memiliki berkas lampiran
 	var documents []model.DocumentItem
@@ -294,6 +297,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		UnreadInboxCount:   unreadInbox,
 		InboxMessages:      inboxMessages,
 		TeamMembers:        teamMembers,
+		TeamFriends:        teamFriends,
 		UserTodosSimple:    simpleTodos,
 		Documents:          documents,
 		CalendarEvents:     calendarEvents,
@@ -332,14 +336,14 @@ func (h *Handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if title == "" {
-			http.Error(w, "Judul tugas wajib diisi", http.StatusBadRequest)
+			http.Error(w, "Task title is required", http.StatusBadRequest)
 			return
 		}
 
 		if deadline != "" {
 			if tm, ok := parseDateTime(deadline); ok {
 				if time.Now().After(tm) {
-					http.Error(w, "Peringatan: Tanggal deadline tidak boleh melebihi/kurang dari tanggal dibuat (waktu telah lewat). Harap tentukan tanggal mendatang.", http.StatusBadRequest)
+					http.Error(w, "Warning: Deadline date cannot be in the past. Please choose a future date.", http.StatusBadRequest)
 					return
 				}
 			}
@@ -392,9 +396,10 @@ func (h *Handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allTodos, _ := h.repo.GetTodosForUser(userID, user.Email, "")
-	countDone, countOngoing, countPending, total, _, _, _, _ := h.repo.CalculateStats(allTodos)
+	countDone, countOngoing, countPending, total, donePercent, _, _, _ := h.repo.CalculateStats(allTodos)
 
 	unreadInbox, _ := h.repo.GetUnreadInboxCount(user.Email)
+	teamFriends, _ := h.repo.GetFriends(userID)
 
 	pageData := model.DashboardData{
 		Username:         user.Username,
@@ -406,9 +411,11 @@ func (h *Handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		CountPending:     countPending,
 		CountOngoing:     countOngoing,
 		CountDone:        countDone,
+		DonePercent:      donePercent,
 		TotalVisible:     total,
 		UnreadInboxCount: unreadInbox,
 		ActivePage:       "create_todo",
+		TeamFriends:      teamFriends,
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "create_todo.html", pageData); err != nil {
@@ -426,7 +433,7 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 
 	todoID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || todoID <= 0 {
-		http.Error(w, "ID tugas tidak valid", http.StatusBadRequest)
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
@@ -442,7 +449,7 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		http.Error(w, "Akses ditolak", http.StatusForbidden)
+		http.Error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
@@ -461,7 +468,7 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&error=%s", todoID, url.QueryEscape(err.Error())), http.StatusSeeOther)
 				return
 			}
-			msg := fmt.Sprintf("Undangan kolaborasi berhasil dikirim ke %s. Menunggu persetujuan (ACC) via inbox.", email)
+			msg := fmt.Sprintf("Collaboration invitation successfully sent to %s. Awaiting approval (ACC) via inbox.", email)
 			http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&msg=%s", todoID, url.QueryEscape(msg)), http.StatusSeeOther)
 			return
 
@@ -473,20 +480,20 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 				doc = header.Filename
 			}
 			if doc == "" {
-				http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&error=%s", todoID, url.QueryEscape("Nama dokumen tidak boleh kosong")), http.StatusSeeOther)
+				http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&error=%s", todoID, url.QueryEscape("Document name cannot be empty")), http.StatusSeeOther)
 				return
 			}
 			if err := h.repo.AttachDocument(todoID, userID, doc); err != nil {
 				http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&error=%s", todoID, url.QueryEscape(err.Error())), http.StatusSeeOther)
 				return
 			}
-			http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&msg=%s", todoID, url.QueryEscape("Dokumen berhasil dilampirkan ke tugas")), http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&msg=%s", todoID, url.QueryEscape("Document successfully attached to task")), http.StatusSeeOther)
 			return
 
 		case "toggle_sub":
 			subID, err := strconv.Atoi(r.FormValue("sub_id"))
 			if err != nil {
-				http.Error(w, "ID sub-task tidak valid", http.StatusBadRequest)
+				http.Error(w, "Invalid sub-task ID", http.StatusBadRequest)
 				return
 			}
 			if err := h.repo.ToggleSubTodo(todoID, subID, userID); err != nil {
@@ -502,7 +509,7 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 			}
 
 		default:
-			http.Error(w, "Aksi tidak valid", http.StatusBadRequest)
+			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return
 		}
 
@@ -516,6 +523,9 @@ func (h *Handler) DetailTodo(w http.ResponseWriter, r *http.Request) {
 
 	todo.FlashMessage = r.URL.Query().Get("msg")
 	todo.FlashError = r.URL.Query().Get("error")
+
+	teamFriends, _ := h.repo.GetFriends(userID)
+	todo.TeamFriends = teamFriends
 
 	if todo.Document != "" {
 		ext := "FILE"
@@ -551,7 +561,7 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 
 	todoID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || todoID <= 0 {
-		http.Error(w, "ID tugas tidak valid", http.StatusBadRequest)
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
@@ -567,18 +577,19 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !todo.IsOwner {
-		if r.Method == http.MethodGet {
-			http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&error=%s", todoID, url.QueryEscape("hanya admin yang dapat merubah project")), http.StatusSeeOther)
+		if r.Method == http.MethodPost {
+			http.Error(w, "you can't change task (hanya admin yang dapat merubah project)", http.StatusForbidden)
 			return
 		}
-		http.Error(w, "hanya admin yang dapat merubah project", http.StatusForbidden)
-		return
+		// On GET, allow rendering edit_todo.html in view-only mode with red warning "you can't change task"
 	}
 
 	if r.Method == http.MethodPost {
+		_ = r.ParseMultipartForm(10 << 20)
+
 		title := strings.TrimSpace(r.FormValue("title"))
 		if title == "" {
-			http.Error(w, "Judul tugas wajib diisi", http.StatusBadRequest)
+			http.Error(w, "Task title is required", http.StatusBadRequest)
 			return
 		}
 
@@ -603,7 +614,7 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 		if deadline != todo.Deadline && status != "sudah" && deadline != "" {
 			if tm, ok := parseDateTime(deadline); ok {
 				if time.Now().After(tm) {
-					http.Error(w, "Peringatan: Perubahan tanggal deadline tidak boleh di masa lampau. Harap tentukan tanggal mendatang.", http.StatusBadRequest)
+					http.Error(w, "Warning: Deadline date cannot be in the past. Please select an upcoming date and time.", http.StatusBadRequest)
 					return
 				}
 			}
@@ -612,6 +623,32 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 		if err := h.repo.UpdateTodo(todoID, userID, title, description, deadline, status, priority); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+
+		subIDsRaw := r.Form["sub_ids"]
+		subTitles := r.Form["sub_titles"]
+		if len(subTitles) > 0 || len(subIDsRaw) > 0 {
+			var subIDs []int
+			for _, idStr := range subIDsRaw {
+				idNum, _ := strconv.Atoi(idStr)
+				subIDs = append(subIDs, idNum)
+			}
+			_ = h.repo.SyncSubTodos(todoID, userID, subIDs, subTitles)
+		}
+
+		docName := strings.TrimSpace(r.FormValue("document"))
+		file, header, fErr := r.FormFile("document_file")
+		if fErr == nil && header != nil {
+			defer file.Close()
+			docName = header.Filename
+		}
+		if docName != "" && docName != todo.Document {
+			_ = h.repo.AttachDocument(todoID, userID, docName)
+		}
+
+		collabEmail := strings.TrimSpace(r.FormValue("collaborator_email"))
+		if collabEmail != "" {
+			_ = h.repo.AddCollaborator(todoID, userID, collabEmail)
 		}
 
 		http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d", todoID), http.StatusSeeOther)
@@ -626,8 +663,9 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allTodos, _ := h.repo.GetTodosForUser(userID, user.Email, "")
-	countDone, countOngoing, countPending, total, _, _, _, _ := h.repo.CalculateStats(allTodos)
+	countDone, countOngoing, countPending, total, donePercent, _, _, _ := h.repo.CalculateStats(allTodos)
 	unreadInbox, _ := h.repo.GetUnreadInboxCount(user.Email)
+	teamFriends, _ := h.repo.GetFriends(userID)
 
 	pageData := model.DashboardData{
 		Username:         user.Username,
@@ -639,10 +677,12 @@ func (h *Handler) EditTodo(w http.ResponseWriter, r *http.Request) {
 		CountPending:     countPending,
 		CountOngoing:     countOngoing,
 		CountDone:        countDone,
+		DonePercent:      donePercent,
 		TotalVisible:     total,
 		UnreadInboxCount: unreadInbox,
 		ActivePage:       "edit_todo",
 		Todo:             todo,
+		TeamFriends:      teamFriends,
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "edit_todo.html", pageData); err != nil {
@@ -660,7 +700,7 @@ func (h *Handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 
 	todoID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || todoID <= 0 {
-		http.Error(w, "ID tugas tidak valid", http.StatusBadRequest)
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
@@ -693,7 +733,7 @@ func (h *Handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		allTodos, _ := h.repo.GetTodosForUser(userID, user.Email, "")
-		countDone, countOngoing, countPending, total, _, _, _, _ := h.repo.CalculateStats(allTodos)
+		countDone, countOngoing, countPending, total, donePercent, _, _, _ := h.repo.CalculateStats(allTodos)
 		unreadInbox, _ := h.repo.GetUnreadInboxCount(user.Email)
 
 		pageData := model.DashboardData{
@@ -706,6 +746,7 @@ func (h *Handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 			CountPending:     countPending,
 			CountOngoing:     countOngoing,
 			CountDone:        countDone,
+			DonePercent:      donePercent,
 			TotalVisible:     total,
 			UnreadInboxCount: unreadInbox,
 			ActivePage:       "delete_todo",
@@ -719,7 +760,7 @@ func (h *Handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 

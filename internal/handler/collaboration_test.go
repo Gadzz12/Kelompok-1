@@ -23,6 +23,7 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 	template.Must(tmpl.New("login.html").Parse("Login Form"))
 	template.Must(tmpl.New("register.html").Parse("Register Form"))
 	template.Must(tmpl.New("detail_todo.html").Parse("Detail: {{.Title}}"))
+	template.Must(tmpl.New("edit_todo.html").Parse("Edit: {{.Todo.Title}}{{if not .Todo.IsOwner}} you can't change task{{end}}"))
 
 	h := New(repo, tmpl)
 
@@ -156,17 +157,16 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 	}
 
 	// 10. Test User B (Invited Collaborator) tries to Edit Project
-	// GET /todo/edit?id=... should redirect to /todo/detail with error "hanya admin yang dapat merubah project"
+	// GET /todo/edit?id=... renders edit_todo in view-only mode with red warning "you can't change task"
 	req = httptest.NewRequest(http.MethodGet, "/todo/edit?id="+strconv.Itoa(todoID), nil)
 	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userB.ID)})
 	rec = httptest.NewRecorder()
 	h.EditTodo(rec, req)
-	if rec.Code != http.StatusSeeOther {
-		t.Fatalf("Collaborator EditTodo GET expected 303 redirect, got %d", rec.Code)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Collaborator EditTodo GET expected 200 OK, got %d", rec.Code)
 	}
-	loc := rec.Header().Get("Location")
-	if !strings.Contains(loc, "hanya+admin+yang+dapat+merubah+project") {
-		t.Fatalf("Collaborator EditTodo GET redirect location should contain error message, got %s", loc)
+	if !strings.Contains(rec.Body.String(), "you can't change task") && !strings.Contains(rec.Body.String(), "you can`t change task") {
+		t.Fatalf("Collaborator EditTodo GET body should contain 'you can't change task', got: %s", rec.Body.String())
 	}
 
 	// POST /todo/edit?id=... should be rejected with 403 Forbidden
@@ -180,7 +180,7 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("Collaborator EditTodo POST expected 403 Forbidden, got %d", rec.Code)
 	}
-	if !strings.Contains(rec.Body.String(), "hanya admin yang dapat merubah project") {
+	if !strings.Contains(rec.Body.String(), "you can't change task") {
 		t.Fatalf("Collaborator EditTodo POST response should contain message, got: %s", rec.Body.String())
 	}
 
@@ -195,5 +195,52 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "hanya admin yang dapat merubah project") {
 		t.Fatalf("Collaborator DeleteTodo POST response should contain message, got: %s", rec.Body.String())
+	}
+
+	// 12. Test Friend Workflow (AddFriend & RemoveFriend)
+	friendForm := url.Values{}
+	friendForm.Set("identifier", "userb@example.com")
+	req = httptest.NewRequest(http.MethodPost, "/friend/add", strings.NewReader(friendForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userA.ID)})
+	rec = httptest.NewRecorder()
+	h.AddFriend(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("AddFriend expected 303 redirect, got %d", rec.Code)
+	}
+
+	// Verify User B is in User A's friends list
+	friends, err := repo.GetFriends(userA.ID)
+	if err != nil || len(friends) != 1 || friends[0].ID != userB.ID {
+		t.Fatalf("User A should have 1 friend (User B): %v, count: %d", err, len(friends))
+	}
+
+	// Adding self should fail
+	selfForm := url.Values{}
+	selfForm.Set("identifier", userA.Email)
+	req = httptest.NewRequest(http.MethodPost, "/friend/add", strings.NewReader(selfForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userA.ID)})
+	rec = httptest.NewRecorder()
+	h.AddFriend(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("AddFriend self expected 303 redirect, got %d", rec.Code)
+	}
+
+	// Remove friend
+	removeForm := url.Values{}
+	removeForm.Set("friend_id", strconv.Itoa(userB.ID))
+	req = httptest.NewRequest(http.MethodPost, "/friend/remove", strings.NewReader(removeForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userA.ID)})
+	rec = httptest.NewRecorder()
+	h.RemoveFriend(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("RemoveFriend expected 303 redirect, got %d", rec.Code)
+	}
+
+	friends, err = repo.GetFriends(userA.ID)
+	if err != nil || len(friends) != 0 {
+		t.Fatalf("User A should have 0 friends after remove: %v, count: %d", err, len(friends))
 	}
 }

@@ -71,7 +71,7 @@ func (h *Handler) AttachDocument(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (h *Handler) AttachDocument(w http.ResponseWriter, r *http.Request) {
 
 	todoID, err := strconv.Atoi(todoIDStr)
 	if err != nil || todoID <= 0 {
-		h.redirectWithError(w, r, fromPage, todoID, "Pilih tugas yang valid untuk melampirkan dokumen.")
+		h.redirectWithError(w, r, fromPage, todoID, "Please select a valid task to attach document.")
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *Handler) AttachDocument(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if docName == "" {
-		h.redirectWithError(w, r, fromPage, todoID, "Nama dokumen atau berkas tidak boleh kosong.")
+		h.redirectWithError(w, r, fromPage, todoID, "Document name or file cannot be empty.")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) AttachDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := fmt.Sprintf("Dokumen '%s' berhasil dilampirkan ke tugas.", docName)
+	msg := fmt.Sprintf("Document '%s' successfully attached to task.", docName)
 	if fromPage == "detail" {
 		http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&msg=%s", todoID, url.QueryEscape(msg)), http.StatusSeeOther)
 		return
@@ -121,12 +121,12 @@ func (h *Handler) SendInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
@@ -136,12 +136,12 @@ func (h *Handler) SendInvitation(w http.ResponseWriter, r *http.Request) {
 
 	todoID, err := strconv.Atoi(todoIDStr)
 	if err != nil || todoID <= 0 {
-		h.redirectWithError(w, r, fromPage, todoID, "Silakan pilih tugas yang valid untuk kolaborasi.")
+		h.redirectWithError(w, r, fromPage, todoID, "Please select a valid task for collaboration.")
 		return
 	}
 
 	if invitee == "" {
-		h.redirectWithError(w, r, fromPage, todoID, "Email atau username kolaborator wajib diisi.")
+		h.redirectWithError(w, r, fromPage, todoID, "Collaborator email or username is required.")
 		return
 	}
 
@@ -152,7 +152,7 @@ func (h *Handler) SendInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Berhasil mengirim undangan
-	msg := fmt.Sprintf("Undangan kolaborasi berhasil dikirim ke %s. Menunggu persetujuan (ACC) melalui inbox.", invitee)
+	msg := fmt.Sprintf("Collaboration invitation successfully sent to %s. Awaiting approval (ACC) via inbox.", invitee)
 	if fromPage == "detail" {
 		http.Redirect(w, r, fmt.Sprintf("/todo/detail?id=%d&msg=%s", todoID, url.QueryEscape(msg)), http.StatusSeeOther)
 		return
@@ -169,18 +169,18 @@ func (h *Handler) RespondInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
 	inviteID, err := strconv.Atoi(r.FormValue("invite_id"))
 	if err != nil || inviteID <= 0 {
-		http.Redirect(w, r, "/?page=inbox&error="+url.QueryEscape("ID undangan tidak valid"), http.StatusSeeOther)
+		http.Redirect(w, r, "/?page=inbox&error="+url.QueryEscape("Invalid invitation ID"), http.StatusSeeOther)
 		return
 	}
 
@@ -202,9 +202,9 @@ func (h *Handler) RespondInvitation(w http.ResponseWriter, r *http.Request) {
 
 	var successMsg string
 	if accept {
-		successMsg = "Undangan kolaborasi telah diterima (ACC). Tugas kini tersedia di workspace Anda!"
+		successMsg = "Collaboration invitation accepted (ACC). Task is now available in your workspace!"
 	} else {
-		successMsg = "Undangan kolaborasi telah ditolak."
+		successMsg = "Collaboration invitation rejected."
 	}
 
 	http.Redirect(w, r, "/?page=inbox&msg="+url.QueryEscape(successMsg), http.StatusSeeOther)
@@ -219,7 +219,7 @@ func (h *Handler) MarkAllInboxRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -233,7 +233,7 @@ func (h *Handler) MarkAllInboxRead(w http.ResponseWriter, r *http.Request) {
 		log.Println("Gagal menandai inbox terbaca:", err)
 	}
 
-	http.Redirect(w, r, "/?page=inbox&msg="+url.QueryEscape("Semua pesan inbox telah ditandai sebagai dibaca."), http.StatusSeeOther)
+	http.Redirect(w, r, "/?page=inbox&msg="+url.QueryEscape("All inbox notifications have been marked as read."), http.StatusSeeOther)
 }
 
 func (h *Handler) redirectWithError(w http.ResponseWriter, r *http.Request, fromPage string, todoID int, errMsg string) {
@@ -242,4 +242,72 @@ func (h *Handler) redirectWithError(w http.ResponseWriter, r *http.Request, from
 		return
 	}
 	http.Redirect(w, r, "/?page=team&error="+url.QueryEscape(errMsg), http.StatusSeeOther)
+}
+
+
+// AddFriend menangani penambahan teman ke dalam tim
+func (h *Handler) AddFriend(w http.ResponseWriter, r *http.Request) {
+	userID := h.getLoggedInUserID(r)
+	if userID == 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	identifier := strings.TrimSpace(r.FormValue("identifier"))
+	if identifier == "" {
+		http.Redirect(w, r, "/?page=team&error="+url.QueryEscape("Please enter an email or username."), http.StatusSeeOther)
+		return
+	}
+
+	addedUser, err := h.repo.AddFriend(userID, identifier)
+	if err != nil {
+		http.Redirect(w, r, "/?page=team&error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
+		return
+	}
+
+	msg := fmt.Sprintf("✓ Successfully added %s (@%s) to your Team!", addedUser.Nama, addedUser.Username)
+	http.Redirect(w, r, "/?page=team&msg="+url.QueryEscape(msg), http.StatusSeeOther)
+}
+
+// RemoveFriend menangani penghapusan teman dari tim
+func (h *Handler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
+	userID := h.getLoggedInUserID(r)
+	if userID == 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	friendID, err := strconv.Atoi(r.FormValue("friend_id"))
+	if err != nil || friendID <= 0 {
+		http.Redirect(w, r, "/?page=team&error="+url.QueryEscape("Invalid friend ID."), http.StatusSeeOther)
+		return
+	}
+
+	if err := h.repo.RemoveFriend(userID, friendID); err != nil {
+		http.Redirect(w, r, "/?page=team&error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
+		return
+	}
+
+	msg := "Friend removed from your Team."
+	http.Redirect(w, r, "/?page=team&msg="+url.QueryEscape(msg), http.StatusSeeOther)
 }
