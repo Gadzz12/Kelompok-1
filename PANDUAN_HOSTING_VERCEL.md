@@ -138,19 +138,13 @@ File [`vercel.json`](file:///D:/project%20copy%20team%201/todo-list/vercel.json)
     "env": {
       "GO_BUILD_FLAGS": "-ldflags '-s -w'"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/main.go"
-    }
-  ]
+  }
 }
 ```
 
-- **`framework: "go"`**: Memberi tahu Vercel untuk menggunakan runtime resmi Go.
+- **`framework: "go"`**: Memberi tahu Vercel untuk menggunakan runtime resmi Go yang secara otomatis merutekan semua request HTTP ke server `main.go` dengan mempertahankan URL path asli.
 - **`GO_BUILD_FLAGS: "-ldflags '-s -w'"`**: Memangkas simbol debug dari binary hasil kompilasi sehingga ukuran file lebih ringkas dan waktu cold-start jauh lebih kencang.
-- **`rewrites: [...]`**: Meneruskan seluruh request URL (termasuk routing halaman, assets statis, dan API) ke server Go `main.go`.
+- **Catatan Routing**: Blok legacy `rewrites` ke `/main.go` dihilangkan agar sesuai dengan aturan routing Vercel terbaru dan tidak menimpa request path internal aplikasi.
 
 ---
 
