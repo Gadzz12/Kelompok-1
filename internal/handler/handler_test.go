@@ -375,3 +375,69 @@ func TestServeLogo(t *testing.T) {
 	}
 }
 
+func TestAvatarSVGRawHTMLRendering(t *testing.T) {
+	// 1. Verifikasi fungsi CleanAvatarHTML
+	svgRaw := `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#DBEAFE"/></svg>`
+	svgEscaped := `&lt;svg viewBox=&#34;0 0 100 100&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;circle cx=&#34;50&#34; cy=&#34;50&#34; r=&#34;50&#34; fill=&#34;#DBEAFE&#34;/&gt;&lt;/svg&gt;`
+
+	clean1 := model.CleanAvatarHTML(svgRaw)
+	if string(clean1) != svgRaw {
+		t.Fatalf("Expected CleanAvatarHTML to preserve raw SVG, got %s", clean1)
+	}
+
+	clean2 := model.CleanAvatarHTML(svgEscaped)
+	if strings.Contains(string(clean2), "&lt;") || !strings.Contains(string(clean2), "<svg viewBox=") {
+		t.Fatalf("Expected CleanAvatarHTML to unescape escaped SVG, got %s", clean2)
+	}
+
+	// 2. Parse template sebenarnya (dashboard.html dan settings.html)
+	tmpl, err := template.ParseGlob("../../templates/*.html")
+	if err != nil {
+		tmpl, err = template.ParseGlob("templates/*.html")
+	}
+	if err != nil {
+		t.Logf("Skip template test jika path templates tidak ditemukan: %v", err)
+		return
+	}
+
+	// 3. Render dashboard.html dengan avatar SVG
+	dashData := model.DashboardData{
+		Username: "testuser",
+		Nama:     "Test User",
+		Avatar:   model.CleanAvatarHTML(svgRaw),
+	}
+
+	var buf strings.Builder
+	if err := tmpl.ExecuteTemplate(&buf, "dashboard.html", dashData); err != nil {
+		t.Fatalf("Gagal render dashboard.html: %v", err)
+	}
+
+	out := buf.String()
+	// Pastikan SVG ter-render sebagai raw HTML (bukan teks &lt;svg)
+	if !strings.Contains(out, `<svg viewBox="0 0 100 100"`) {
+		t.Fatal("dashboard.html tidak memuat raw SVG avatar unescaped")
+	}
+	if strings.Contains(out, `&lt;svg viewBox=`) {
+		t.Fatal("dashboard.html membocorkan kode mentah SVG yang ter-escape (&lt;svg)")
+	}
+
+	// 4. Render settings.html dengan avatar SVG
+	settingsData := model.SettingsData{
+		Username: "testuser",
+		Nama:     "Test User",
+		Avatar:   model.CleanAvatarHTML(svgRaw),
+	}
+	buf.Reset()
+	if err := tmpl.ExecuteTemplate(&buf, "settings.html", settingsData); err != nil {
+		t.Fatalf("Gagal render settings.html: %v", err)
+	}
+
+	outSettings := buf.String()
+	if !strings.Contains(outSettings, `<svg viewBox="0 0 100 100"`) {
+		t.Fatal("settings.html tidak memuat raw SVG avatar unescaped")
+	}
+	if strings.Contains(outSettings, `&lt;svg viewBox=`) {
+		t.Fatal("settings.html membocorkan kode mentah SVG yang ter-escape (&lt;svg)")
+	}
+}
+

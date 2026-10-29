@@ -909,7 +909,7 @@ func (r *GORMRepository) GetFriends(userID int) ([]model.FriendUser, error) {
 			Username: u.Username,
 			Email:    u.Email,
 			Initial:  init,
-			Avatar:   u.Avatar,
+			Avatar:   model.CleanAvatarHTML(u.Avatar),
 		})
 	}
 	return result, nil

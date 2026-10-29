@@ -49,7 +49,7 @@ func (h *Handler) Settings(w http.ResponseWriter, r *http.Request) {
 		Nama:         user.Nama,
 		Email:        user.Email,
 		Initial:      initial,
-		Avatar:       user.Avatar,
+		Avatar:       model.CleanAvatarHTML(user.Avatar),
 		Language:     lang,
 		JoinedLabel:  joinedLabel,
 		TotalVisible: total,
@@ -77,6 +77,14 @@ func (h *Handler) UpdateUserPreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	avatar := strings.TrimSpace(r.FormValue("avatar"))
+	if strings.Contains(avatar, "&lt;svg") {
+		avatar = strings.ReplaceAll(avatar, "&lt;", "<")
+		avatar = strings.ReplaceAll(avatar, "&gt;", ">")
+		avatar = strings.ReplaceAll(avatar, "&quot;", "\"")
+		avatar = strings.ReplaceAll(avatar, "&#34;", "\"")
+		avatar = strings.ReplaceAll(avatar, "&#39;", "'")
+		avatar = strings.ReplaceAll(avatar, "&amp;", "&")
+	}
 	language := strings.TrimSpace(r.FormValue("language"))
 
 	if err := h.repo.UpdateUserPreferences(userID, avatar, language); err != nil {

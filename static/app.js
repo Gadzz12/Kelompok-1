@@ -1233,16 +1233,57 @@
 
     function updateAvatarElements(svgStr) {
         if (!svgStr) return;
-        document.querySelectorAll(".user-avatar-container, .ws-avatar, #settingsProfileAvatar").forEach(function (el) {
+        if (svgStr.indexOf("&lt;svg") !== -1) {
+            svgStr = svgStr
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/&#34;/g, '"')
+                .replace(/&amp;/g, "&");
+        }
+        document.querySelectorAll("#sidebarAvatar, .welcome-row .ws-avatar, .page-title .ws-avatar, #settingsProfileAvatar").forEach(function (el) {
             el.innerHTML = svgStr;
         });
+    }
+
+    function fixRawSvgLeak() {
+        document.querySelectorAll(".user-avatar-container, .ws-avatar, .member-avatar, .sw-avatar, #settingsProfileAvatar").forEach(function (el) {
+            var txt = (el.textContent || "").trim();
+            if (txt.indexOf("<svg") === 0 && !el.querySelector("svg")) {
+                el.innerHTML = txt;
+            } else if (el.innerHTML && el.innerHTML.indexOf("&lt;svg") !== -1) {
+                el.innerHTML = el.innerHTML
+                    .replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#34;/g, '"')
+                    .replace(/&amp;/g, "&");
+            }
+        });
+    }
+
+    // Run fix immediately and on DOM load
+    fixRawSvgLeak();
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", fixRawSvgLeak);
     }
 
     // Load saved avatar on initial startup
     try {
         var storedAvatar = localStorage.getItem("user_avatar");
-        if (storedAvatar && storedAvatar.indexOf("<svg") !== -1) {
-            updateAvatarElements(storedAvatar);
+        if (storedAvatar) {
+            if (storedAvatar.indexOf("&lt;svg") !== -1) {
+                storedAvatar = storedAvatar
+                    .replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#34;/g, '"')
+                    .replace(/&amp;/g, "&");
+                localStorage.setItem("user_avatar", storedAvatar);
+            }
+            if (storedAvatar.indexOf("<svg") !== -1) {
+                updateAvatarElements(storedAvatar);
+            }
         }
     } catch (e) {}
 

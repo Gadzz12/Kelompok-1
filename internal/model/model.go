@@ -1,6 +1,24 @@
 package model
 
-import "time"
+import (
+	"html/template"
+	"strings"
+	"time"
+)
+
+// CleanAvatarHTML memastikan string SVG avatar tidak ter-escape dan dikembalikan sebagai template.HTML
+func CleanAvatarHTML(raw string) template.HTML {
+	s := strings.TrimSpace(raw)
+	if strings.Contains(s, "&lt;svg") {
+		s = strings.ReplaceAll(s, "&lt;", "<")
+		s = strings.ReplaceAll(s, "&gt;", ">")
+		s = strings.ReplaceAll(s, "&quot;", "\"")
+		s = strings.ReplaceAll(s, "&#34;", "\"")
+		s = strings.ReplaceAll(s, "&#39;", "'")
+		s = strings.ReplaceAll(s, "&amp;", "&")
+	}
+	return template.HTML(s)
+}
 
 // User merepresentasikan data pengguna
 type User struct {
@@ -80,12 +98,12 @@ type Friend struct {
 
 // FriendUser merepresentasikan data profil teman untuk tampilan UI
 type FriendUser struct {
-	ID       int    `json:"id"`
-	Nama     string `json:"nama"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Initial  string `json:"initial"`
-	Avatar   string `json:"avatar,omitempty"`
+	ID       int           `json:"id"`
+	Nama     string        `json:"nama"`
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	Initial  string        `json:"initial"`
+	Avatar   template.HTML `json:"avatar,omitempty"`
 }
 
 // TodoSimple adalah representasi ringkas Todo untuk dropdown pemilihan tugas saat invite
@@ -201,7 +219,7 @@ type DashboardData struct {
 	Documents          []DocumentItem
 	CalendarEvents     []CalendarEvent
 	CalendarEventsJSON string
-	Avatar             string
+	Avatar             template.HTML
 	Language           string
 	FlashMessage       string
 	FlashError         string
@@ -215,7 +233,7 @@ type SettingsData struct {
 	Nama         string
 	Email        string
 	Initial      string
-	Avatar       string
+	Avatar       template.HTML
 	Language     string
 	JoinedLabel  string
 	TotalVisible int
