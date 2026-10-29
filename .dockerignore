@@ -6,4 +6,4 @@ data.json
 *.log
 tmp/
 temp/
-cloudflared.exe
+.vercel

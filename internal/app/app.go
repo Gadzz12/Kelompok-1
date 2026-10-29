@@ -74,6 +74,6 @@ func RunWithAssets(templateFS fs.FS, staticFS http.FileSystem) {
 
 	fmt.Printf("Server Todo List aktif pada port %s\n", cfg.Port)
 	fmt.Printf("-> Akses Lokal     : http://localhost%s\n", cfg.Port)
-	fmt.Printf("-> Akses Cloudflare: Siap di-tunnel melalui Cloudflare atau Cloud Hosting\n")
+	fmt.Printf("-> Hosting Vercel  : Siap di-deploy ke Vercel (https://vercel.com)\n")
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }

@@ -3,7 +3,7 @@
 <p align="center">
   <img src="static/logo.png" alt="Flowspace Logo" width="96" height="96" style="border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
   <br>
-  <b>Aplikasi manajemen tugas dan ruang kerja kolaborasi tim yang cepat, responsif, dan siap di-hosting ke Cloudflare.</b>
+  <b>Aplikasi manajemen tugas dan ruang kerja kolaborasi tim yang cepat, responsif, dan siap di-hosting ke Vercel.</b>
   <br>
   <i>Dibangun dengan Go (Golang), GORM, PostgreSQL (Neon Cloud), HTML5, CSS3, dan Vanilla JavaScript.</i>
 </p>
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version">
   <img src="https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Cloud-Neon.tech-00E599?style=for-the-badge&logo=neon&logoColor=black" alt="Neon">
-  <img src="https://img.shields.io/badge/Proxy-Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare">
+  <img src="https://img.shields.io/badge/Hosting-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
   <img src="https://img.shields.io/badge/Design-Responsive-blueviolet?style=for-the-badge" alt="Responsive">
 </p>
 
@@ -52,9 +52,9 @@ Aplikasi ini dirancang dengan prinsip **Mobile-First & Fluid Responsive Design**
   - Tampilan live preview langsung tersinkronisasi ke seluruh bagian dashboard.
 - 🌓 **Tema Gelap & Terang (Dark / Light Mode)**:
   - Deteksi tema preferensi sistem operasi secara otomatis atau pemilihan manual via toggle yang tersimpan di `localStorage`.
-- 🌐 **Cloud & Cloudflare Ready**:
+- 🌐 **Cloud & Vercel Ready**:
   - Aset HTML template dan file statis dikompilasi menggunakan `embed.FS` standar Go menjadi binary tunggal mandiri.
-  - Skrip otomasi Cloudflare Quick Tunnel untuk akses publik HTTPS instan tanpa localhost.
+  - Konfigurasi `vercel.json` siap pakai untuk deployment otomatis (CI/CD) ke Vercel.
   - Multi-stage `Dockerfile` ringan (~20MB) siap deploy ke platform cloud (Render, Koyeb, Railway, VPS).
 
 ---
@@ -96,10 +96,9 @@ todo-list/
 ├── go.sum                       # Checksum dependencies
 ├── main.go                      # Entry point utama dengan go:embed
 ├── main_test.go                 # Pengujian integritas embedded assets
-├── PANDUAN_HOSTING_CLOUDFLARE.md# Panduan lengkap hosting via Cloudflare
+├── PANDUAN_HOSTING_VERCEL.md    # Panduan lengkap hosting & deploy ke Vercel
 ├── README.md                    # Dokumentasi proyek
-├── start-cloudflare-tunnel.bat  # 1-klik Cloudflare Tunnel untuk Windows
-└── start-cloudflare-tunnel.ps1  # PowerShell runner untuk Cloudflare Tunnel
+└── vercel.json                  # Konfigurasi routing & runtime untuk Vercel
 ```
 
 ---
@@ -138,30 +137,35 @@ Buka peramban (browser) di alamat: [http://localhost:8080](http://localhost:8080
 
 ---
 
-## ☁️ Menjalankan lewat Cloudflare (Tanpa Localhost)
+## ▲ Hosting & Deploy ke Vercel (Online 24/7 Gratis)
 
-Agar aplikasi dapat diakses dari luar jaringan (handphone, tablet, teman, klien) tanpa mengetik `localhost:8080`:
+Aplikasi dapat di-deploy ke Vercel dengan domain HTTPS otomatis dan online 24 jam nonstop:
 
-### Cara Instan: Cloudflare Quick Tunnel (1 Menit, 100% Gratis)
-1. Jalankan aplikasi Go:
+### Metode 1: Deploy Otomatis via GitHub (Sangat Direkomendasikan)
+1. **Push proyek ke GitHub**:
    ```powershell
-   go run main.go
+   git add .
+   git commit -m "Deploy Flowspace ke Vercel"
+   git push origin main
    ```
-2. Klik ganda file:
-   ```text
-   start-cloudflare-tunnel.bat
-   ```
-   *(atau jalankan `.\start-cloudflare-tunnel.ps1` di PowerShell)*
-3. Skrip akan otomatis mengunduh `cloudflared.exe` dan menampilkan URL HTTPS publik resmi dari Cloudflare:
-   ```text
-   +--------------------------------------------------------------------------------------------+
-   |  Your quick Tunnel has been created! Visit it at:                                          |
-   |  https://bebas-acak-nama.trycloudflare.com                                                |
-   +--------------------------------------------------------------------------------------------+
-   ```
-4. Buka URL tersebut di perangkat mana saja di seluruh dunia!
+2. Buka [https://vercel.com](https://vercel.com) dan klik **Add New...** > **Project**.
+3. Pilih repository GitHub Anda, lalu klik **Import**.
+4. Tambahkan Environment Variable:
+   - **Key**: `DATABASE_URL`
+   - **Value**: Masukkan connection string PostgreSQL Neon Anda (contoh: `postgresql://user:pass@ep-cool.ap-southeast-1.aws.neon.tech/dbname?sslmode=require`).
+5. Klik **Deploy**! Aplikasi Anda langsung live di URL `https://nama-proyek.vercel.app`.
 
-> 💡 **Panduan Lengkap Cloudflare**: Untuk petunjuk menghubungkan ke nama domain sendiri (`todo.domainanda.com`) atau deploy 24 jam nonstop via Render/Koyeb, silakan baca [**PANDUAN_HOSTING_CLOUDFLARE.md**](PANDUAN_HOSTING_CLOUDFLARE.md).
+### Metode 2: Deploy Cepat via Vercel CLI (Terminal)
+1. Pasang CLI Vercel jika belum ada:
+   ```powershell
+   npm install -g vercel
+   ```
+2. Jalankan perintah deploy:
+   ```powershell
+   vercel --prod
+   ```
+
+> 💡 **Panduan Lengkap Vercel**: Untuk petunjuk menghubungkan custom domain, panduan detail langkah-demi-langkah, dan troubleshooting, silakan baca [**PANDUAN_HOSTING_VERCEL.md**](PANDUAN_HOSTING_VERCEL.md).
 
 ---
 
@@ -192,4 +196,4 @@ go test -v ./...
 ## 📄 Lisensi & Kredit
 
 - Dikembangkan oleh **Flowspace Team**
-- Ditenagai oleh **Go**, **GORM**, **Neon PostgreSQL**, dan **Cloudflare**
+- Ditenagai oleh **Go**, **GORM**, **Neon PostgreSQL**, dan **Vercel**
