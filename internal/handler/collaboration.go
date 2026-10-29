@@ -245,7 +245,7 @@ func (h *Handler) redirectWithError(w http.ResponseWriter, r *http.Request, from
 }
 
 
-// AddFriend menangani penambahan teman ke dalam tim
+// AddFriend menangani pengiriman permintaan pertemanan ke pengguna lain
 func (h *Handler) AddFriend(w http.ResponseWriter, r *http.Request) {
 	userID := h.getLoggedInUserID(r)
 	if userID == 0 {
@@ -269,14 +269,68 @@ func (h *Handler) AddFriend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addedUser, err := h.repo.AddFriend(userID, identifier)
+	req, err := h.repo.SendFriendRequest(userID, identifier)
 	if err != nil {
 		http.Redirect(w, r, "/?page=team&error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
 		return
 	}
 
-	msg := fmt.Sprintf("✓ Successfully added %s (@%s) to your Team!", addedUser.Nama, addedUser.Username)
+	targetName := req.ReceiverName
+	if targetName == "" {
+		targetName = identifier
+	}
+	msg := fmt.Sprintf("✓ Friend request sent to %s. Awaiting approval (ACC) via inbox.", targetName)
 	http.Redirect(w, r, "/?page=team&msg="+url.QueryEscape(msg), http.StatusSeeOther)
+}
+
+// RespondFriendRequest menangani konfirmasi persetujuan (ACC) atau penolakan permintaan pertemanan
+func (h *Handler) RespondFriendRequest(w http.ResponseWriter, r *http.Request) {
+	userID := h.getLoggedInUserID(r)
+	if userID == 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	requestID, err := strconv.Atoi(r.FormValue("request_id"))
+	if err != nil || requestID <= 0 {
+		http.Redirect(w, r, "/?page=inbox&error="+url.QueryEscape("Invalid friend request ID"), http.StatusSeeOther)
+		return
+	}
+
+	action := strings.TrimSpace(strings.ToLower(r.FormValue("action")))
+	accept := action == "accept"
+
+	user, exists := h.repo.GetUserByID(userID)
+	if !exists {
+		http.Redirect(w, r, "/logout", http.StatusSeeOther)
+		return
+	}
+
+	err = h.repo.RespondFriendRequest(requestID, userID, user.Email, accept)
+	if err != nil {
+		log.Println("Gagal merespons permintaan pertemanan:", err)
+		http.Redirect(w, r, "/?page=inbox&error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
+		return
+	}
+
+	var successMsg string
+	if accept {
+		successMsg = "Friend request accepted (ACC)! Profile is now connected in your Team."
+	} else {
+		successMsg = "Friend request rejected."
+	}
+
+	http.Redirect(w, r, "/?page=inbox&msg="+url.QueryEscape(successMsg), http.StatusSeeOther)
 }
 
 // RemoveFriend menangani penghapusan teman dari tim

@@ -185,6 +185,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	inboxMessages, _ := h.repo.GetInboxMessages(user.Email)
 	teamMembers, _ := h.repo.GetTeamMembers(user.Email)
 	teamFriends, _ := h.repo.GetFriends(userID)
+	pendingFriendReqs, _ := h.repo.GetPendingFriendRequests(userID)
 	simpleTodos, _ := h.repo.GetUserSimpleTodos(userID, user.Email)
 	flashMsg := r.URL.Query().Get("msg")
 	flashErr := r.URL.Query().Get("error")
@@ -296,9 +297,10 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		ActivePage:         activePage,
 		UnreadInboxCount:   unreadInbox,
 		InboxMessages:      inboxMessages,
-		TeamMembers:        teamMembers,
-		TeamFriends:        teamFriends,
-		UserTodosSimple:    simpleTodos,
+		TeamMembers:           teamMembers,
+		TeamFriends:           teamFriends,
+		PendingFriendRequests: pendingFriendReqs,
+		UserTodosSimple:       simpleTodos,
 		Documents:          documents,
 		CalendarEvents:     calendarEvents,
 		CalendarEventsJSON: string(calendarJSONBytes),

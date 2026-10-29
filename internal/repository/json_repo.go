@@ -912,6 +912,18 @@ func (r *JSONRepository) GetInboxMessages(userEmail string) ([]model.InboxMessag
 					}
 				}
 			}
+			if msg.Type == "friend_request" && msg.FriendRequestID > 0 {
+				for _, req := range data.FriendRequests {
+					if req.ID == msg.FriendRequestID {
+						if req.Status == "accepted" {
+							msg.Type = "friend_accepted"
+						} else if req.Status == "rejected" {
+							msg.Type = "friend_rejected"
+						}
+						break
+					}
+				}
+			}
 			result = append(result, msg)
 		}
 	}
@@ -1145,7 +1157,250 @@ func (r *JSONRepository) CalculateStats(todos []model.Todo) (countDone, countOng
 	return CalculateStats(todos)
 }
 
-// AddFriend menambahkan teman ke daftar Team berdasarkan username atau email
+// SendFriendRequest mengirimkan permintaan pertemanan ke pengguna lain dan membuat notifikasi di inbox penerima
+func (r *JSONRepository) SendFriendRequest(senderID int, receiverIdentifier string) (model.FriendRequest, error) {
+	data := r.loadData()
+	receiverIdentifier = strings.TrimSpace(receiverIdentifier)
+	if receiverIdentifier == "" {
+		return model.FriendRequest{}, errors.New("Please enter a valid email or username.")
+	}
+
+	var sender *model.User
+	for i := range data.Users {
+		if data.Users[i].ID == senderID {
+			sender = &data.Users[i]
+			break
+		}
+	}
+	if sender == nil {
+		return model.FriendRequest{}, errors.New("Sender user not found.")
+	}
+
+	var receiver *model.User
+	for i := range data.Users {
+		if strings.EqualFold(data.Users[i].Email, receiverIdentifier) || strings.EqualFold(data.Users[i].Username, receiverIdentifier) {
+			receiver = &data.Users[i]
+			break
+		}
+	}
+	if receiver == nil {
+		return model.FriendRequest{}, fmt.Errorf("User '%s' was not found. Please ensure they have registered.", receiverIdentifier)
+	}
+
+	if receiver.ID == senderID || strings.EqualFold(receiver.Email, sender.Email) {
+		return model.FriendRequest{}, errors.New("You cannot add yourself as a friend.")
+	}
+
+	// Check if already friends
+	for _, f := range data.Friends {
+		if (f.UserID == senderID && f.FriendID == receiver.ID) || (f.UserID == receiver.ID && f.FriendID == senderID) {
+			return model.FriendRequest{}, fmt.Errorf("'%s' is already in your team.", receiver.Nama)
+		}
+	}
+
+	// Check if pending request from sender to receiver already exists
+	for _, req := range data.FriendRequests {
+		if req.SenderID == senderID && req.ReceiverID == receiver.ID && req.Status == "pending" {
+			return model.FriendRequest{}, errors.New("Friend request already sent and awaiting approval (ACC).")
+		}
+		if req.SenderID == receiver.ID && req.ReceiverID == senderID && req.Status == "pending" {
+			return model.FriendRequest{}, fmt.Errorf("'%s' has already sent you a friend request. Please check your inbox to accept it.", receiver.Nama)
+		}
+	}
+
+	nextReqID := 1
+	for _, req := range data.FriendRequests {
+		if req.ID >= nextReqID {
+			nextReqID = req.ID + 1
+		}
+	}
+
+	now := time.Now().Format("2006-01-02 15:04")
+	freq := model.FriendRequest{
+		ID:               nextReqID,
+		SenderID:         sender.ID,
+		SenderName:       sender.Nama,
+		SenderEmail:      sender.Email,
+		ReceiverID:       receiver.ID,
+		ReceiverName:     receiver.Nama,
+		ReceiverUsername: receiver.Username,
+		ReceiverEmail:    receiver.Email,
+		Status:           "pending",
+		CreatedAt:        now,
+	}
+	data.FriendRequests = append(data.FriendRequests, freq)
+
+	nextMsgID := 1
+	for _, m := range data.InboxMessages {
+		if m.ID >= nextMsgID {
+			nextMsgID = m.ID + 1
+		}
+	}
+
+	inboxMsg := model.InboxMessage{
+		ID:              nextMsgID,
+		UserID:          receiver.ID,
+		UserEmail:       receiver.Email,
+		Sender:          sender.Nama,
+		Title:           "Permintaan Pertemanan",
+		Message:         fmt.Sprintf("%s (@%s) mengirim permintaan pertemanan ke Tim Anda. Menunggu persetujuan (ACC) Anda.", sender.Nama, sender.Username),
+		Type:            "friend_request",
+		FriendRequestID: freq.ID,
+		IsRead:          false,
+		CreatedAt:       now,
+	}
+	data.InboxMessages = append(data.InboxMessages, inboxMsg)
+
+	r.saveData(data)
+	return freq, nil
+}
+
+// RespondFriendRequest menangani konfirmasi persetujuan (ACC) atau penolakan permintaan pertemanan
+func (r *JSONRepository) RespondFriendRequest(requestID int, responderID int, responderEmail string, accept bool) error {
+	data := r.loadData()
+
+	var reqIndex = -1
+	for i := range data.FriendRequests {
+		if data.FriendRequests[i].ID == requestID {
+			reqIndex = i
+			break
+		}
+	}
+	if reqIndex == -1 {
+		return errors.New("Friend request not found.")
+	}
+
+	freq := &data.FriendRequests[reqIndex]
+	if freq.ReceiverID != responderID && !strings.EqualFold(freq.ReceiverEmail, responderEmail) {
+		return errors.New("You do not have permission to respond to this friend request.")
+	}
+
+	if freq.Status != "pending" {
+		return fmt.Errorf("Friend request has already been %s.", freq.Status)
+	}
+
+	var responder *model.User
+	for i := range data.Users {
+		if data.Users[i].ID == responderID {
+			responder = &data.Users[i]
+			break
+		}
+	}
+	responderName := responderEmail
+	responderUsername := ""
+	if responder != nil && responder.Nama != "" {
+		responderName = responder.Nama
+		responderUsername = responder.Username
+	}
+
+	now := time.Now().Format("2006-01-02 15:04")
+	freq.UpdatedAt = now
+
+	// Mark inbox message for responder as read
+	for i := range data.InboxMessages {
+		if data.InboxMessages[i].FriendRequestID == requestID && strings.EqualFold(data.InboxMessages[i].UserEmail, responderEmail) {
+			data.InboxMessages[i].IsRead = true
+		}
+	}
+
+	nextMsgID := 1
+	for _, m := range data.InboxMessages {
+		if m.ID >= nextMsgID {
+			nextMsgID = m.ID + 1
+		}
+	}
+
+	if accept {
+		freq.Status = "accepted"
+
+		// Add mutual friends
+		nextFriendID := 1
+		for _, f := range data.Friends {
+			if f.ID >= nextFriendID {
+				nextFriendID = f.ID + 1
+			}
+		}
+
+		has1 := false
+		has2 := false
+		for _, f := range data.Friends {
+			if f.UserID == freq.SenderID && f.FriendID == freq.ReceiverID {
+				has1 = true
+			}
+			if f.UserID == freq.ReceiverID && f.FriendID == freq.SenderID {
+				has2 = true
+			}
+		}
+		if !has1 {
+			data.Friends = append(data.Friends, model.Friend{
+				ID:        nextFriendID,
+				UserID:    freq.SenderID,
+				FriendID:  freq.ReceiverID,
+				CreatedAt: now,
+			})
+			nextFriendID++
+		}
+		if !has2 {
+			data.Friends = append(data.Friends, model.Friend{
+				ID:        nextFriendID,
+				UserID:    freq.ReceiverID,
+				FriendID:  freq.SenderID,
+				CreatedAt: now,
+			})
+		}
+
+		msgText := fmt.Sprintf("%s telah menerima (ACC) permintaan pertemanan Anda. Sekarang kalian saling terhubung di Team!", responderName)
+		if responderUsername != "" {
+			msgText = fmt.Sprintf("%s (@%s) telah menerima (ACC) permintaan pertemanan Anda. Sekarang kalian saling terhubung di Team!", responderName, responderUsername)
+		}
+
+		data.InboxMessages = append(data.InboxMessages, model.InboxMessage{
+			ID:              nextMsgID,
+			UserID:          freq.SenderID,
+			UserEmail:       freq.SenderEmail,
+			Sender:          responderName,
+			Title:           "Permintaan Pertemanan Diterima (ACC)",
+			Message:         msgText,
+			Type:            "friend_accepted",
+			FriendRequestID: freq.ID,
+			IsRead:          false,
+			CreatedAt:       now,
+		})
+	} else {
+		freq.Status = "rejected"
+		msgText := fmt.Sprintf("%s menolak permintaan pertemanan.", responderName)
+		data.InboxMessages = append(data.InboxMessages, model.InboxMessage{
+			ID:              nextMsgID,
+			UserID:          freq.SenderID,
+			UserEmail:       freq.SenderEmail,
+			Sender:          responderName,
+			Title:           "Permintaan Pertemanan Ditolak",
+			Message:         msgText,
+			Type:            "friend_rejected",
+			FriendRequestID: freq.ID,
+			IsRead:          false,
+			CreatedAt:       now,
+		})
+	}
+
+	r.saveData(data)
+	return nil
+}
+
+// GetPendingFriendRequests mengembalikan daftar permintaan pertemanan keluar yang masih berstatus pending
+func (r *JSONRepository) GetPendingFriendRequests(userID int) ([]model.FriendRequest, error) {
+	data := r.loadData()
+	var result []model.FriendRequest
+	for i := len(data.FriendRequests) - 1; i >= 0; i-- {
+		req := data.FriendRequests[i]
+		if req.SenderID == userID && req.Status == "pending" {
+			result = append(result, req)
+		}
+	}
+	return result, nil
+}
+
+// AddFriend menambahkan teman secara langsung (dua arah/mutual) ke daftar Team berdasarkan username atau email
 func (r *JSONRepository) AddFriend(userID int, friendIdentifier string) (*model.User, error) {
 	data := r.loadData()
 	friendIdentifier = strings.TrimSpace(friendIdentifier)
@@ -1169,7 +1424,7 @@ func (r *JSONRepository) AddFriend(userID int, friendIdentifier string) (*model.
 	}
 
 	for _, f := range data.Friends {
-		if f.UserID == userID && f.FriendID == friendUser.ID {
+		if (f.UserID == userID && f.FriendID == friendUser.ID) || (f.UserID == friendUser.ID && f.FriendID == userID) {
 			return nil, fmt.Errorf("'%s' is already in your team.", friendUser.Nama)
 		}
 	}
@@ -1186,6 +1441,13 @@ func (r *JSONRepository) AddFriend(userID int, friendIdentifier string) (*model.
 		ID:        nextID,
 		UserID:    userID,
 		FriendID:  friendUser.ID,
+		CreatedAt: nowStr,
+	})
+	nextID++
+	data.Friends = append(data.Friends, model.Friend{
+		ID:        nextID,
+		UserID:    friendUser.ID,
+		FriendID:  userID,
 		CreatedAt: nowStr,
 	})
 
@@ -1225,17 +1487,27 @@ func (r *JSONRepository) GetFriends(userID int) ([]model.FriendUser, error) {
 	return friends, nil
 }
 
-// RemoveFriend menghapus teman dari daftar Team
+// RemoveFriend menghapus pertemanan dua arah dari daftar Team
 func (r *JSONRepository) RemoveFriend(userID int, friendID int) error {
 	data := r.loadData()
 	var newFriends []model.Friend
 	for _, f := range data.Friends {
-		if f.UserID == userID && f.FriendID == friendID {
+		if (f.UserID == userID && f.FriendID == friendID) || (f.UserID == friendID && f.FriendID == userID) {
 			continue
 		}
 		newFriends = append(newFriends, f)
 	}
 	data.Friends = newFriends
+
+	var newRequests []model.FriendRequest
+	for _, req := range data.FriendRequests {
+		if (req.SenderID == userID && req.ReceiverID == friendID) || (req.SenderID == friendID && req.ReceiverID == userID) {
+			continue
+		}
+		newRequests = append(newRequests, req)
+	}
+	data.FriendRequests = newRequests
+
 	r.saveData(data)
 	return nil
 }

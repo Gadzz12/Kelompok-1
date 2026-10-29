@@ -64,17 +64,18 @@ type Invitation struct {
 
 // InboxMessage merepresentasikan notifikasi atau pesan di inbox pengguna
 type InboxMessage struct {
-	ID        int    `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID    int    `json:"user_id,omitempty" gorm:"index"`
-	UserEmail string `json:"user_email" gorm:"size:255;index;not null"`
-	Sender    string `json:"sender" gorm:"size:255;not null"`
-	Title     string `json:"title" gorm:"size:255;not null"`
-	Message   string `json:"message" gorm:"type:text;not null"`
-	Type      string `json:"type" gorm:"size:50;default:'invite'"` // "invite", "info", "accepted", "rejected"
-	InviteID  int    `json:"invite_id,omitempty" gorm:"index"`
-	TodoID    int    `json:"todo_id,omitempty" gorm:"index"`
-	IsRead    bool   `json:"is_read" gorm:"default:false"`
-	CreatedAt string `json:"created_at" gorm:"size:50"`
+	ID              int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserID          int    `json:"user_id,omitempty" gorm:"index"`
+	UserEmail       string `json:"user_email" gorm:"size:255;index;not null"`
+	Sender          string `json:"sender" gorm:"size:255;not null"`
+	Title           string `json:"title" gorm:"size:255;not null"`
+	Message         string `json:"message" gorm:"type:text;not null"`
+	Type            string `json:"type" gorm:"size:50;default:'invite'"` // "invite", "info", "accepted", "rejected", "friend_request", "friend_accepted", "friend_rejected"
+	InviteID        int    `json:"invite_id,omitempty" gorm:"index"`
+	FriendRequestID int    `json:"friend_request_id,omitempty" gorm:"index"`
+	TodoID          int    `json:"todo_id,omitempty" gorm:"index"`
+	IsRead          bool   `json:"is_read" gorm:"default:false"`
+	CreatedAt       string `json:"created_at" gorm:"size:50"`
 }
 
 // TeamMember merepresentasikan anggota tim untuk tampilan halaman Team
@@ -94,6 +95,21 @@ type Friend struct {
 	UserID    int    `json:"user_id" gorm:"index;not null"`
 	FriendID  int    `json:"friend_id" gorm:"index;not null"`
 	CreatedAt string `json:"created_at,omitempty" gorm:"size:50"`
+}
+
+// FriendRequest merepresentasikan permintaan pertemanan antar pengguna
+type FriendRequest struct {
+	ID               int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	SenderID         int    `json:"sender_id" gorm:"index;not null"`
+	SenderName       string `json:"sender_name" gorm:"size:255;not null"`
+	SenderEmail      string `json:"sender_email" gorm:"size:255;not null"`
+	ReceiverID       int    `json:"receiver_id" gorm:"index;not null"`
+	ReceiverName     string `json:"receiver_name,omitempty" gorm:"size:255"`
+	ReceiverUsername string `json:"receiver_username,omitempty" gorm:"size:100"`
+	ReceiverEmail    string `json:"receiver_email" gorm:"size:255;index;not null"`
+	Status           string `json:"status" gorm:"size:30;default:'pending'"` // "pending", "accepted", "rejected"
+	CreatedAt        string `json:"created_at" gorm:"size:50"`
+	UpdatedAt        string `json:"updated_at,omitempty" gorm:"size:50"`
 }
 
 // FriendUser merepresentasikan data profil teman untuk tampilan UI
@@ -167,13 +183,14 @@ type Todo struct {
 
 // DataStore struktur JSON untuk file data.json
 type DataStore struct {
-	Users         []User         `json:"users"`
-	Todos         []Todo         `json:"todos"`
-	SubTodos      []SubTodo      `json:"sub_todos"`
-	Collaborators []Collaborator `json:"collaborators"`
-	Invitations   []Invitation   `json:"invitations"`
-	InboxMessages []InboxMessage `json:"inbox_messages"`
-	Friends       []Friend       `json:"friends"`
+	Users          []User          `json:"users"`
+	Todos          []Todo          `json:"todos"`
+	SubTodos       []SubTodo       `json:"sub_todos"`
+	Collaborators  []Collaborator  `json:"collaborators"`
+	Invitations    []Invitation    `json:"invitations"`
+	InboxMessages  []InboxMessage  `json:"inbox_messages"`
+	Friends        []Friend        `json:"friends"`
+	FriendRequests []FriendRequest `json:"friend_requests"`
 }
 
 // TodoItem adalah data tugas yang sudah dilengkapi label tampilan
@@ -223,8 +240,9 @@ type DashboardData struct {
 	Language           string
 	FlashMessage       string
 	FlashError         string
-	Todo               Todo
-	TeamFriends        []FriendUser
+	Todo                  Todo
+	TeamFriends           []FriendUser
+	PendingFriendRequests []FriendRequest
 }
 
 // SettingsData data yang dikirim ke template settings.html

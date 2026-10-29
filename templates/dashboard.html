@@ -874,8 +874,8 @@
                 <div class="inbox-list" id="inboxList">
                     {{range .InboxMessages}}
                     <article class="inbox-item{{if not .IsRead}} unread{{end}}">
-                        <div class="message-avatar{{if eq .Type "accepted"}} green{{else if eq .Type "rejected"}} peach{{else if eq .Type "invite"}} violet{{end}}">
-                            {{if .Sender}}{{slice .Sender 0 2}}{{else}}IN{{end}}
+                        <div class="message-avatar{{if or (eq .Type "accepted") (eq .Type "friend_accepted")}} green{{else if or (eq .Type "rejected") (eq .Type "friend_rejected")}} peach{{else}} violet{{end}}">
+                            {{if .Sender}}{{if ge (len .Sender) 2}}{{slice .Sender 0 2}}{{else}}{{.Sender}}{{end}}{{else}}IN{{end}}
                         </div>
                         <div class="inbox-body">
                             <div class="inbox-header-row">
@@ -900,6 +900,22 @@
                                     </form>
                                 </div>
                             </div>
+                            {{else if eq .Type "friend_request"}}
+                            <div class="inbox-actions">
+                                <span class="status-pill status-pending" data-i18n="invite_pending_acc">Waiting for Acceptance (Pending ACC)</span>
+                                <div class="action-buttons-row">
+                                    <form method="POST" action="/friend/respond" style="display:inline;margin:0;">
+                                        <input type="hidden" name="request_id" value="{{.FriendRequestID}}">
+                                        <input type="hidden" name="action" value="accept">
+                                        <button type="submit" class="primary-btn btn-acc" data-i18n="btn_acc">✓ Accept (ACC)</button>
+                                    </form>
+                                    <form method="POST" action="/friend/respond" style="display:inline;margin:0;">
+                                        <input type="hidden" name="request_id" value="{{.FriendRequestID}}">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="secondary-btn btn-reject" data-i18n="btn_reject">✕ Reject</button>
+                                    </form>
+                                </div>
+                            </div>
                             {{else if eq .Type "accepted"}}
                             <div class="inbox-actions">
                                 <span class="status-pill status-accepted" data-i18n="invite_accepted">✓ Invitation Accepted (ACC'd)</span>
@@ -907,9 +923,18 @@
                                 <a class="small-btn" href="/todo/detail?id={{.TodoID}}" data-i18n="btn_view_task">View Task →</a>
                                 {{end}}
                             </div>
+                            {{else if eq .Type "friend_accepted"}}
+                            <div class="inbox-actions">
+                                <span class="status-pill status-accepted">✓ Friend Request Accepted (ACC'd)</span>
+                                <a class="small-btn" href="/team">View Team →</a>
+                            </div>
                             {{else if eq .Type "rejected"}}
                             <div class="inbox-actions">
                                 <span class="status-pill status-rejected" data-i18n="invite_rejected">✕ Invitation Rejected</span>
+                            </div>
+                            {{else if eq .Type "friend_rejected"}}
+                            <div class="inbox-actions">
+                                <span class="status-pill status-rejected">✕ Friend Request Rejected</span>
                             </div>
                             {{end}}
                         </div>
@@ -944,10 +969,9 @@
                             <strong>{{.Nama}}</strong>
                             <small>{{.Email}} (@{{.Username}})</small>
                             <span class="role-pill role-active" style="background:var(--green-soft);color:var(--green);border:1px solid var(--green);">Friend</span>
-                            <form method="POST" action="/friend/remove" style="margin-top:12px;margin-bottom:0;" onsubmit="return confirm('Remove {{.Nama}} from your team?');">
-                                <input type="hidden" name="friend_id" value="{{.ID}}">
-                                <button type="submit" class="secondary-btn small-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3);font-size:11px;padding:3px 9px;">✕ Remove Friend</button>
-                            </form>
+                            <div style="margin-top:12px;">
+                                <button type="button" class="secondary-btn small-btn btn-open-remove-friend" data-id="{{.ID}}" data-name="{{.Nama}}" style="color:#ef4444;border-color:rgba(239,68,68,0.3);font-size:11px;padding:3px 9px;">✕ Remove Friend</button>
+                            </div>
                         </div>
                     </article>
                     {{else}}
@@ -959,6 +983,27 @@
                     </div>
                     {{end}}
                 </div>
+
+                {{if .PendingFriendRequests}}
+                <div style="margin-top:32px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                        <h3 style="font-size:15px;font-weight:600;margin:0;">⏳ Pending Requests (Waiting for ACC)</h3>
+                        <span class="role-pill" style="font-size:11px;padding:2px 8px;background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber);">{{len .PendingFriendRequests}}</span>
+                    </div>
+                    <div class="team-grid">
+                        {{range .PendingFriendRequests}}
+                        <article class="member-card" style="opacity:0.85;border-style:dashed;">
+                            <div class="member-avatar user-avatar-container">⏳</div>
+                            <div class="member-info">
+                                <strong>{{if .ReceiverName}}{{.ReceiverName}}{{else}}{{.ReceiverEmail}}{{end}}</strong>
+                                <small>{{.ReceiverEmail}}{{if .ReceiverUsername}} (@{{.ReceiverUsername}}){{end}}</small>
+                                <span class="role-pill" style="background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber);">Waiting for ACC</span>
+                            </div>
+                        </article>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
             </section>
 
             <!-- PAGE: DOCUMENTS -->
@@ -1168,11 +1213,42 @@
                             <input type="text" name="identifier" required placeholder="e.g. colleague@example.com or username" autofocus>
                         </label>
                         <div class="form-note-box">
-                            ℹ️ <strong>Friends added to your team will automatically appear as selectable options whenever you assign collaborators to tasks.</strong>
+                            ℹ️ <strong>Sending a friend request will notify them in their Inbox. Once they accept (ACC), you will both appear in each other's Team.</strong>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="secondary-btn" id="cancelAddFriendModalBtn">Cancel</button>
-                            <button type="submit" class="primary-btn">＋ Add to Team</button>
+                            <button type="submit" class="primary-btn">＋ Send Friend Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL: CONFIRM REMOVE FRIEND -->
+            <div class="modal-backdrop" id="removeFriendModal" hidden>
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <div class="welcome-mark" style="background:rgba(239,68,68,0.12);color:#ef4444;">⚠️</div>
+                        <div>
+                            <h2>Hapus Pertemanan</h2>
+                            <p class="muted">Konfirmasi penghapusan teman dari tim workspace Anda.</p>
+                        </div>
+                        <button type="button" class="modal-close" id="closeRemoveFriendModalBtn" aria-label="Close">×</button>
+                    </div>
+                    <form method="POST" action="/friend/remove" class="app-form">
+                        <input type="hidden" name="friend_id" id="removeFriendID" value="">
+                        
+                        <div style="padding:16px 0;text-align:left;">
+                            <p style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text);">
+                                Apakah anda yakin ingin menghapus pertemanan dengan <span id="removeFriendName" style="color:#ef4444;"></span>?
+                            </p>
+                            <p class="muted" style="font-size:13px;line-height:1.5;margin:0;">
+                                Relasi pertemanan akan dihapus dari kedua belah pihak. Profil teman ini tidak akan muncul lagi di halaman Team Anda, dan profil Anda juga tidak akan muncul di Team mereka.
+                            </p>
+                        </div>
+
+                        <div class="form-actions" style="margin-top:14px;">
+                            <button type="button" class="secondary-btn" id="cancelRemoveFriendModalBtn">Batal</button>
+                            <button type="submit" class="primary-btn" style="background:#ef4444;border-color:#ef4444;color:#fff;">Ya, Hapus Pertemanan</button>
                         </div>
                     </form>
                 </div>
@@ -1227,6 +1303,6 @@
     <script>
         window.calendarEventsData = {{if .CalendarEventsJSON}}{{.CalendarEventsJSON}}{{else}}"[]"{{end}};
     </script>
-    <script src="/static/app.js?v=20261028_04"></script>
+    <script src="/static/app.js?v=20261029_02"></script>
 </body>
 </html>

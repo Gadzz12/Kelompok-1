@@ -197,7 +197,7 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 		t.Fatalf("Collaborator DeleteTodo POST response should contain message, got: %s", rec.Body.String())
 	}
 
-	// 12. Test Friend Workflow (AddFriend & RemoveFriend)
+	// 12. Test Friend Workflow (AddFriend -> Inbox notification -> ACC / Accept -> Mutual Friend -> RemoveFriend)
 	friendForm := url.Values{}
 	friendForm.Set("identifier", "userb@example.com")
 	req = httptest.NewRequest(http.MethodPost, "/friend/add", strings.NewReader(friendForm.Encode()))
@@ -209,10 +209,69 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 		t.Fatalf("AddFriend expected 303 redirect, got %d", rec.Code)
 	}
 
-	// Verify User B is in User A's friends list
-	friends, err := repo.GetFriends(userA.ID)
-	if err != nil || len(friends) != 1 || friends[0].ID != userB.ID {
-		t.Fatalf("User A should have 1 friend (User B): %v, count: %d", err, len(friends))
+	// Before ACC, User A should have 0 friends, but 1 pending sent request
+	friendsA, err := repo.GetFriends(userA.ID)
+	if err != nil || len(friendsA) != 0 {
+		t.Fatalf("User A should have 0 active friends before ACC, got %d", len(friendsA))
+	}
+	pendingReqs, err := repo.GetPendingFriendRequests(userA.ID)
+	if err != nil || len(pendingReqs) != 1 {
+		t.Fatalf("User A should have 1 pending request, got %d", len(pendingReqs))
+	}
+
+	// Verify User B received a friend request notification in inbox
+	inboxB, err := repo.GetInboxMessages(userB.Email)
+	if err != nil || len(inboxB) == 0 {
+		t.Fatalf("User B should receive inbox message, got: %v", err)
+	}
+	var friendReqMsg *model.InboxMessage
+	for i := range inboxB {
+		if inboxB[i].Type == "friend_request" {
+			friendReqMsg = &inboxB[i]
+			break
+		}
+	}
+	if friendReqMsg == nil {
+		t.Fatalf("User B did not receive friend_request inbox message: %+v", inboxB)
+	}
+
+	// User B responds by ACC (Accepting) the friend request
+	respondForm := url.Values{}
+	respondForm.Set("request_id", strconv.Itoa(friendReqMsg.FriendRequestID))
+	respondForm.Set("action", "accept")
+	req = httptest.NewRequest(http.MethodPost, "/friend/respond", strings.NewReader(respondForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userB.ID)})
+	rec = httptest.NewRecorder()
+	h.RespondFriendRequest(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("RespondFriendRequest expected 303 redirect, got %d", rec.Code)
+	}
+
+	// Now BOTH User A and User B should have each other as mutual friends
+	friendsA, err = repo.GetFriends(userA.ID)
+	if err != nil || len(friendsA) != 1 || friendsA[0].ID != userB.ID {
+		t.Fatalf("User A should have User B as friend: %v, count: %d", err, len(friendsA))
+	}
+	friendsB, err := repo.GetFriends(userB.ID)
+	if err != nil || len(friendsB) != 1 || friendsB[0].ID != userA.ID {
+		t.Fatalf("User B should have User A as friend: %v, count: %d", err, len(friendsB))
+	}
+
+	// Verify User A received an inbox notification about the accepted friend request
+	inboxA, err := repo.GetInboxMessages(userA.Email)
+	if err != nil || len(inboxA) == 0 {
+		t.Fatalf("User A should receive friend_accepted notification: %v", err)
+	}
+	var acceptedMsgFound bool
+	for _, m := range inboxA {
+		if m.Type == "friend_accepted" {
+			acceptedMsgFound = true
+			break
+		}
+	}
+	if !acceptedMsgFound {
+		t.Fatalf("User A inbox should have friend_accepted message: %+v", inboxA)
 	}
 
 	// Adding self should fail
@@ -227,7 +286,7 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 		t.Fatalf("AddFriend self expected 303 redirect, got %d", rec.Code)
 	}
 
-	// Remove friend
+	// Remove friend (removes mutual connection)
 	removeForm := url.Values{}
 	removeForm.Set("friend_id", strconv.Itoa(userB.ID))
 	req = httptest.NewRequest(http.MethodPost, "/friend/remove", strings.NewReader(removeForm.Encode()))
@@ -239,8 +298,84 @@ func TestHandlerCollaborationAndInbox(t *testing.T) {
 		t.Fatalf("RemoveFriend expected 303 redirect, got %d", rec.Code)
 	}
 
-	friends, err = repo.GetFriends(userA.ID)
-	if err != nil || len(friends) != 0 {
-		t.Fatalf("User A should have 0 friends after remove: %v, count: %d", err, len(friends))
+	friendsA, err = repo.GetFriends(userA.ID)
+	if err != nil || len(friendsA) != 0 {
+		t.Fatalf("User A should have 0 friends after remove: %v, count: %d", err, len(friendsA))
+	}
+	friendsB, err = repo.GetFriends(userB.ID)
+	if err != nil || len(friendsB) != 0 {
+		t.Fatalf("User B should have 0 friends after mutual remove: %v, count: %d", err, len(friendsB))
+	}
+
+	// 13. Test Rejection Workflow
+	// User A sends request again
+	friendForm = url.Values{}
+	friendForm.Set("identifier", "userb@example.com")
+	req = httptest.NewRequest(http.MethodPost, "/friend/add", strings.NewReader(friendForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userA.ID)})
+	rec = httptest.NewRecorder()
+	h.AddFriend(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("AddFriend re-send expected 303 redirect, got %d", rec.Code)
+	}
+
+	// Sending duplicate should fail
+	rec = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/friend/add", strings.NewReader(friendForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userA.ID)})
+	h.AddFriend(rec, req)
+	if !strings.Contains(rec.Header().Get("Location"), "error=") {
+		t.Fatalf("Expected error redirect on duplicate friend request, got location: %s", rec.Header().Get("Location"))
+	}
+
+	// Get latest friend_request for User B
+	inboxB, err = repo.GetInboxMessages(userB.Email)
+	if err != nil || len(inboxB) == 0 {
+		t.Fatalf("User B inbox should not be empty")
+	}
+	var rejectReqID int
+	for _, m := range inboxB {
+		if m.Type == "friend_request" {
+			rejectReqID = m.FriendRequestID
+			break
+		}
+	}
+	if rejectReqID == 0 {
+		t.Fatalf("Expected to find pending friend_request for User B")
+	}
+
+	// User B rejects the request
+	respondForm = url.Values{}
+	respondForm.Set("request_id", strconv.Itoa(rejectReqID))
+	respondForm.Set("action", "reject")
+	req = httptest.NewRequest(http.MethodPost, "/friend/respond", strings.NewReader(respondForm.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "user_id", Value: strconv.Itoa(userB.ID)})
+	rec = httptest.NewRecorder()
+	h.RespondFriendRequest(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("RespondFriendRequest reject expected 303 redirect, got %d", rec.Code)
+	}
+
+	// Verify neither has active friends
+	friendsA, _ = repo.GetFriends(userA.ID)
+	friendsB, _ = repo.GetFriends(userB.ID)
+	if len(friendsA) != 0 || len(friendsB) != 0 {
+		t.Fatalf("Expected 0 friends after rejection, got A: %d, B: %d", len(friendsA), len(friendsB))
+	}
+
+	// Verify User A received a friend_rejected inbox message
+	inboxA, _ = repo.GetInboxMessages(userA.Email)
+	var foundRejected bool
+	for _, m := range inboxA {
+		if m.Type == "friend_rejected" {
+			foundRejected = true
+			break
+		}
+	}
+	if !foundRejected {
+		t.Fatalf("User A should have received friend_rejected message")
 	}
 }

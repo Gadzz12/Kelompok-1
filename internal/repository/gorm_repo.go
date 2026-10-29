@@ -624,6 +624,16 @@ func (r *GORMRepository) GetInboxMessages(userEmail string) ([]model.InboxMessag
 				result[i].Type = inv.Status
 			}
 		}
+		if result[i].Type == "friend_request" && result[i].FriendRequestID > 0 {
+			var freq model.FriendRequest
+			if r.db.First(&freq, result[i].FriendRequestID).Error == nil && freq.Status != "pending" {
+				if freq.Status == "accepted" {
+					result[i].Type = "friend_accepted"
+				} else if freq.Status == "rejected" {
+					result[i].Type = "friend_rejected"
+				}
+			}
+		}
 	}
 	return result, nil
 }
@@ -839,7 +849,192 @@ func (r *GORMRepository) CalculateStats(todos []model.Todo) (countDone, countOng
 }
 
 
-// AddFriend menambahkan teman ke daftar Team berdasarkan username atau email
+// SendFriendRequest mengirimkan permintaan pertemanan ke pengguna lain dan membuat notifikasi di inbox penerima
+func (r *GORMRepository) SendFriendRequest(senderID int, receiverIdentifier string) (model.FriendRequest, error) {
+	var req model.FriendRequest
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		receiverIdentifier = strings.TrimSpace(receiverIdentifier)
+		if receiverIdentifier == "" {
+			return errors.New("Please enter a valid email or username.")
+		}
+
+		var sender model.User
+		if err := tx.First(&sender, senderID).Error; err != nil {
+			return errors.New("Sender user not found.")
+		}
+
+		var receiver model.User
+		err := tx.Where("LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)", receiverIdentifier, receiverIdentifier).First(&receiver).Error
+		if err != nil {
+			return fmt.Errorf("User '%s' was not found. Please ensure they have registered.", receiverIdentifier)
+		}
+
+		if receiver.ID == senderID || strings.EqualFold(receiver.Email, sender.Email) {
+			return errors.New("You cannot add yourself as a friend.")
+		}
+
+		// Check if already friends
+		var friendCount int64
+		tx.Model(&model.Friend{}).Where("(user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)", senderID, receiver.ID, receiver.ID, senderID).Count(&friendCount)
+		if friendCount > 0 {
+			return fmt.Errorf("'%s' is already in your team.", receiver.Nama)
+		}
+
+		// Check if pending request from sender to receiver already exists
+		var pendingCount int64
+		tx.Model(&model.FriendRequest{}).Where("sender_id = ? AND receiver_id = ? AND status = ?", senderID, receiver.ID, "pending").Count(&pendingCount)
+		if pendingCount > 0 {
+			return errors.New("Friend request already sent and awaiting approval (ACC).")
+		}
+
+		// Check if reverse pending request exists
+		var reversePendingCount int64
+		tx.Model(&model.FriendRequest{}).Where("sender_id = ? AND receiver_id = ? AND status = ?", receiver.ID, senderID, "pending").Count(&reversePendingCount)
+		if reversePendingCount > 0 {
+			return fmt.Errorf("'%s' has already sent you a friend request. Please check your inbox to accept it.", receiver.Nama)
+		}
+
+		now := time.Now().Format("2006-01-02 15:04")
+		req = model.FriendRequest{
+			SenderID:         sender.ID,
+			SenderName:       sender.Nama,
+			SenderEmail:      sender.Email,
+			ReceiverID:       receiver.ID,
+			ReceiverName:     receiver.Nama,
+			ReceiverUsername: receiver.Username,
+			ReceiverEmail:    receiver.Email,
+			Status:           "pending",
+			CreatedAt:        now,
+		}
+		if err := tx.Create(&req).Error; err != nil {
+			return err
+		}
+
+		inboxMsg := model.InboxMessage{
+			UserID:          receiver.ID,
+			UserEmail:       receiver.Email,
+			Sender:          sender.Nama,
+			Title:           "Permintaan Pertemanan",
+			Message:         fmt.Sprintf("%s (@%s) mengirim permintaan pertemanan ke Tim Anda. Menunggu persetujuan (ACC) Anda.", sender.Nama, sender.Username),
+			Type:            "friend_request",
+			FriendRequestID: req.ID,
+			IsRead:          false,
+			CreatedAt:       now,
+		}
+		return tx.Create(&inboxMsg).Error
+	})
+	return req, err
+}
+
+// RespondFriendRequest menangani konfirmasi persetujuan (ACC) atau penolakan permintaan pertemanan
+func (r *GORMRepository) RespondFriendRequest(requestID int, responderID int, responderEmail string, accept bool) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var freq model.FriendRequest
+		if err := tx.First(&freq, requestID).Error; err != nil {
+			return errors.New("Friend request not found.")
+		}
+
+		if freq.ReceiverID != responderID && !strings.EqualFold(freq.ReceiverEmail, responderEmail) {
+			return errors.New("You do not have permission to respond to this friend request.")
+		}
+
+		if freq.Status != "pending" {
+			return fmt.Errorf("Friend request has already been %s.", freq.Status)
+		}
+
+		var responder model.User
+		responderName := responderEmail
+		responderUsername := ""
+		if err := tx.First(&responder, responderID).Error; err == nil && responder.Nama != "" {
+			responderName = responder.Nama
+			responderUsername = responder.Username
+		}
+
+		now := time.Now().Format("2006-01-02 15:04")
+		freq.UpdatedAt = now
+
+		// Mark inbox message for responder as read
+		tx.Model(&model.InboxMessage{}).Where("friend_request_id = ? AND LOWER(user_email) = LOWER(?)", requestID, responderEmail).Update("is_read", true)
+
+		if accept {
+			freq.Status = "accepted"
+			if err := tx.Save(&freq).Error; err != nil {
+				return err
+			}
+
+			// Add mutual friends
+			var count1 int64
+			tx.Model(&model.Friend{}).Where("user_id = ? AND friend_id = ?", freq.SenderID, freq.ReceiverID).Count(&count1)
+			if count1 == 0 {
+				f1 := model.Friend{
+					UserID:    freq.SenderID,
+					FriendID:  freq.ReceiverID,
+					CreatedAt: now,
+				}
+				if err := tx.Create(&f1).Error; err != nil {
+					return err
+				}
+			}
+
+			var count2 int64
+			tx.Model(&model.Friend{}).Where("user_id = ? AND friend_id = ?", freq.ReceiverID, freq.SenderID).Count(&count2)
+			if count2 == 0 {
+				f2 := model.Friend{
+					UserID:    freq.ReceiverID,
+					FriendID:  freq.SenderID,
+					CreatedAt: now,
+				}
+				if err := tx.Create(&f2).Error; err != nil {
+					return err
+				}
+			}
+
+			// Notify sender in inbox
+			msgText := fmt.Sprintf("%s telah menerima (ACC) permintaan pertemanan Anda. Sekarang kalian saling terhubung di Team!", responderName)
+			if responderUsername != "" {
+				msgText = fmt.Sprintf("%s (@%s) telah menerima (ACC) permintaan pertemanan Anda. Sekarang kalian saling terhubung di Team!", responderName, responderUsername)
+			}
+			return tx.Create(&model.InboxMessage{
+				UserID:          freq.SenderID,
+				UserEmail:       freq.SenderEmail,
+				Sender:          responderName,
+				Title:           "Permintaan Pertemanan Diterima (ACC)",
+				Message:         msgText,
+				Type:            "friend_accepted",
+				FriendRequestID: freq.ID,
+				IsRead:          false,
+				CreatedAt:       now,
+			}).Error
+		} else {
+			freq.Status = "rejected"
+			if err := tx.Save(&freq).Error; err != nil {
+				return err
+			}
+
+			msgText := fmt.Sprintf("%s menolak permintaan pertemanan.", responderName)
+			return tx.Create(&model.InboxMessage{
+				UserID:          freq.SenderID,
+				UserEmail:       freq.SenderEmail,
+				Sender:          responderName,
+				Title:           "Permintaan Pertemanan Ditolak",
+				Message:         msgText,
+				Type:            "friend_rejected",
+				FriendRequestID: freq.ID,
+				IsRead:          false,
+				CreatedAt:       now,
+			}).Error
+		}
+	})
+}
+
+// GetPendingFriendRequests mengembalikan daftar permintaan pertemanan keluar yang masih berstatus pending
+func (r *GORMRepository) GetPendingFriendRequests(userID int) ([]model.FriendRequest, error) {
+	var result []model.FriendRequest
+	err := r.db.Where("sender_id = ? AND status = ?", userID, "pending").Order("id desc").Find(&result).Error
+	return result, err
+}
+
+// AddFriend menambahkan teman secara langsung (dua arah/mutual) ke daftar Team
 func (r *GORMRepository) AddFriend(userID int, friendIdentifier string) (*model.User, error) {
 	friendIdentifier = strings.TrimSpace(friendIdentifier)
 	if friendIdentifier == "" {
@@ -857,20 +1052,30 @@ func (r *GORMRepository) AddFriend(userID int, friendIdentifier string) (*model.
 	}
 
 	var count int64
-	r.db.Model(&model.Friend{}).Where("user_id = ? AND friend_id = ?", userID, friendUser.ID).Count(&count)
+	r.db.Model(&model.Friend{}).Where("(user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)", userID, friendUser.ID, friendUser.ID, userID).Count(&count)
 	if count > 0 {
 		return nil, fmt.Errorf("'%s' is already in your team.", friendUser.Nama)
 	}
 
 	nowStr := time.Now().Format("2006-01-02 15:04:05")
-	f := model.Friend{
+	f1 := model.Friend{
 		UserID:    userID,
 		FriendID:  friendUser.ID,
 		CreatedAt: nowStr,
 	}
-	if err := r.db.Create(&f).Error; err != nil {
+	if err := r.db.Create(&f1).Error; err != nil {
 		return nil, err
 	}
+
+	f2 := model.Friend{
+		UserID:    friendUser.ID,
+		FriendID:  userID,
+		CreatedAt: nowStr,
+	}
+	if err := r.db.Create(&f2).Error; err != nil {
+		return nil, err
+	}
+
 	return &friendUser, nil
 }
 
@@ -915,7 +1120,8 @@ func (r *GORMRepository) GetFriends(userID int) ([]model.FriendUser, error) {
 	return result, nil
 }
 
-// RemoveFriend menghapus teman dari daftar Team
+// RemoveFriend menghapus pertemanan dua arah dari daftar Team
 func (r *GORMRepository) RemoveFriend(userID int, friendID int) error {
-	return r.db.Where("user_id = ? AND friend_id = ?", userID, friendID).Delete(&model.Friend{}).Error
+	r.db.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", userID, friendID, friendID, userID).Delete(&model.FriendRequest{})
+	return r.db.Where("(user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)", userID, friendID, friendID, userID).Delete(&model.Friend{}).Error
 }

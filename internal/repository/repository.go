@@ -35,6 +35,9 @@ type Repository interface {
 	GetUserSimpleTodos(userID int, userEmail string) ([]model.TodoSimple, error)
 
 	// Friend / Team Network operations
+	SendFriendRequest(senderID int, receiverIdentifier string) (model.FriendRequest, error)
+	RespondFriendRequest(requestID int, responderID int, responderEmail string, accept bool) error
+	GetPendingFriendRequests(userID int) ([]model.FriendRequest, error)
 	AddFriend(userID int, friendIdentifier string) (*model.User, error)
 	GetFriends(userID int) ([]model.FriendUser, error)
 	RemoveFriend(userID int, friendID int) error

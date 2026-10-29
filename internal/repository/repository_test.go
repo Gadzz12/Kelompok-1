@@ -183,6 +183,34 @@ func TestJSONRepositoryOperations(t *testing.T) {
 		t.Fatalf("Expected 0 friends after remove, got %d", len(friends))
 	}
 
+	// Test 11: FriendRequest workflow (SendFriendRequest, RespondFriendRequest accept/reject)
+	freq, err := repo.SendFriendRequest(1, "friend2@example.com")
+	if err != nil {
+		t.Fatalf("SendFriendRequest failed: %v", err)
+	}
+	if freq.Status != "pending" || freq.ReceiverID != user2.ID {
+		t.Fatalf("Unexpected FriendRequest: %+v", freq)
+	}
+
+	// Receiver should have friend_request in inbox
+	inbox2, err := repo.GetInboxMessages(user2.Email)
+	if err != nil || len(inbox2) == 0 || inbox2[0].Type != "friend_request" {
+		t.Fatalf("Expected friend_request in inbox, got: %+v (err: %v)", inbox2, err)
+	}
+
+	// Receiver accepts friend request
+	err = repo.RespondFriendRequest(freq.ID, user2.ID, user2.Email, true)
+	if err != nil {
+		t.Fatalf("RespondFriendRequest accept failed: %v", err)
+	}
+
+	// Both should now be friends
+	friends1, _ := repo.GetFriends(1)
+	friends2, _ := repo.GetFriends(user2.ID)
+	if len(friends1) != 1 || len(friends2) != 1 {
+		t.Fatalf("Expected 1 mutual friend each, got friends1: %d, friends2: %d", len(friends1), len(friends2))
+	}
+
 	// Cleanup verified by TempDir
 	_ = os.Remove(tempFile)
 }

@@ -69,6 +69,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/invitation/respond", h.RespondInvitation)
 	mux.HandleFunc("/inbox/read-all", h.MarkAllInboxRead)
 	mux.HandleFunc("/friend/add", h.AddFriend)
+	mux.HandleFunc("/friend/respond", h.RespondFriendRequest)
 	mux.HandleFunc("/friend/remove", h.RemoveFriend)
 
 	// File statis (CSS, JS) untuk dashboard dan halaman lainnya
