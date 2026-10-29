@@ -27,15 +27,21 @@ func init() {
 
 // Handler mengelola HTTP request untuk aplikasi Todo
 type Handler struct {
-	repo repository.Repository
-	tmpl *template.Template
+	repo     repository.Repository
+	tmpl     *template.Template
+	staticFS http.FileSystem
 }
 
-// New membuat instance Handler baru
-func New(repo repository.Repository, tmpl *template.Template) *Handler {
+// New membuat instance Handler baru dengan opsi static file system kustom (misalnya embed.FS)
+func New(repo repository.Repository, tmpl *template.Template, staticFS ...http.FileSystem) *Handler {
+	var sfs http.FileSystem
+	if len(staticFS) > 0 && staticFS[0] != nil {
+		sfs = staticFS[0]
+	}
 	return &Handler{
-		repo: repo,
-		tmpl: tmpl,
+		repo:     repo,
+		tmpl:     tmpl,
+		staticFS: sfs,
 	}
 }
 
@@ -66,8 +72,13 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/friend/remove", h.RemoveFriend)
 
 	// File statis (CSS, JS) untuk dashboard dan halaman lainnya
-	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	var staticServer http.Handler
+	if h.staticFS != nil {
+		staticServer = http.FileServer(h.staticFS)
+	} else {
+		staticServer = http.FileServer(http.Dir("static"))
+	}
+	mux.Handle("/static/", http.StripPrefix("/static/", staticServer))
 
 	serveLogo := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")

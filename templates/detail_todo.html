@@ -426,6 +426,63 @@
             opacity: 0.92;
             border-left: 3px solid var(--amber);
         }
+
+        /* ---------- Responsive Support (Mobile, Tablet, Desktop) ---------- */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 10px;
+            }
+
+            .container {
+                padding: 20px 16px;
+                border-radius: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .header h2 {
+                font-size: 19px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .info p {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 3px;
+                line-height: 1.5;
+                padding-bottom: 8px;
+            }
+
+            .subtask-form {
+                flex-direction: column;
+            }
+
+            .subtask-form button {
+                width: 100%;
+            }
+
+            .collaborator-form {
+                flex-direction: column;
+            }
+
+            .collaborator-form input[type="text"],
+            .collaborator-form button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
