@@ -18,6 +18,21 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// IsProduction mengecek apakah aplikasi berjalan di environment production atau serverless (seperti Vercel)
+func IsProduction() bool {
+	appEnv := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	if appEnv == "production" || appEnv == "prod" {
+		return true
+	}
+	if os.Getenv("VERCEL") != "" || os.Getenv("VERCEL_ENV") != "" {
+		return true
+	}
+	if strings.ToLower(strings.TrimSpace(os.Getenv("ENV"))) == "production" {
+		return true
+	}
+	return false
+}
+
 // Open membuka koneksi PostgreSQL memakai GORM dengan validasi DSN dan TLS
 func Open(dsn string) (*gorm.DB, error) {
 	dsn = strings.TrimSpace(dsn)
@@ -37,10 +52,34 @@ func Open(dsn string) (*gorm.DB, error) {
 		return nil, errors.New("DATABASE_URL wajib memakai TLS: sslmode=require atau verify-full")
 	}
 
+	inProd := IsProduction()
+
 	if query.Get("connect_timeout") == "" {
-		query.Set("connect_timeout", "25")
+		if inProd {
+			query.Set("connect_timeout", "10")
+		} else {
+			query.Set("connect_timeout", "25")
+		}
 	}
 	u.RawQuery = query.Encode()
+
+	// Level log GORM: silent saat di cloud/production supaya tidak menghasilkan overhead log query yang lambat
+	gormLogLevel := logger.Warn
+	if inProd {
+		gormLogLevel = logger.Silent
+	}
+	if envLevel := strings.ToLower(strings.TrimSpace(os.Getenv("GORM_LOG_LEVEL"))); envLevel != "" {
+		switch envLevel {
+		case "silent":
+			gormLogLevel = logger.Silent
+		case "error":
+			gormLogLevel = logger.Error
+		case "warn":
+			gormLogLevel = logger.Warn
+		case "info":
+			gormLogLevel = logger.Info
+		}
+	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  u.String(),
@@ -48,7 +87,7 @@ func Open(dsn string) (*gorm.DB, error) {
 	}), &gorm.Config{
 		TranslateError:       true,
 		DisableAutomaticPing: true,
-		Logger:               logger.Default.LogMode(logger.Warn),
+		Logger:               logger.Default.LogMode(gormLogLevel),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("konfigurasi koneksi PostgreSQL tidak valid: %w", err)
@@ -59,12 +98,25 @@ func Open(dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	conn.SetMaxOpenConns(10)
-	conn.SetMaxIdleConns(5)
-	conn.SetConnMaxLifetime(30 * time.Minute)
-	conn.SetConnMaxIdleTime(5 * time.Minute)
+	// Konfigurasi koneksi pool database yang optimal untuk serverless (Vercel / Cloud Functions)
+	if inProd {
+		conn.SetMaxOpenConns(2)
+		conn.SetMaxIdleConns(1)
+		conn.SetConnMaxLifetime(10 * time.Minute)
+		conn.SetConnMaxIdleTime(1 * time.Minute)
+	} else {
+		conn.SetMaxOpenConns(10)
+		conn.SetMaxIdleConns(5)
+		conn.SetConnMaxLifetime(30 * time.Minute)
+		conn.SetConnMaxIdleTime(5 * time.Minute)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	pingTimeout := 10 * time.Second
+	if !inProd {
+		pingTimeout = 25 * time.Second
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
 	defer cancel()
 
 	if err := conn.PingContext(ctx); err != nil {
@@ -75,8 +127,27 @@ func Open(dsn string) (*gorm.DB, error) {
 	return db, nil
 }
 
-// AutoMigrate membuat/memperbarui tabel database secara otomatis
+// AutoMigrate membuat/memperbarui tabel database secara otomatis.
+// Di environment production / serverless, migrasi dilewati secara default agar tidak
+// menyebabkan timeout startup (batas 30 detik di Vercel), kecuali diaktifkan via
+// environment variable AUTO_MIGRATE=true atau RUN_MIGRATIONS=true.
 func AutoMigrate(db *gorm.DB) error {
+	autoMigrateEnv := strings.ToLower(strings.TrimSpace(os.Getenv("AUTO_MIGRATE")))
+	runMigrationsEnv := strings.ToLower(strings.TrimSpace(os.Getenv("RUN_MIGRATIONS")))
+
+	// Jika secara eksplisit dinonaktifkan
+	if autoMigrateEnv == "false" || autoMigrateEnv == "0" || runMigrationsEnv == "false" || runMigrationsEnv == "0" {
+		log.Println("[Database] AutoMigrate dilewati (dinonaktifkan via environment variable).")
+		return nil
+	}
+
+	// Jangan jalankan AutoMigrate secara otomatis jika aplikasi berada di environment production
+	if IsProduction() && autoMigrateEnv != "true" && autoMigrateEnv != "1" && runMigrationsEnv != "true" && runMigrationsEnv != "1" {
+		log.Println("[Database] AutoMigrate dilewati pada environment production untuk mempercepat startup server.")
+		return nil
+	}
+
+	log.Println("[Database] Menjalankan AutoMigrate skema tabel...")
 	return db.AutoMigrate(
 		&model.User{},
 		&model.Todo{},
@@ -91,6 +162,11 @@ func AutoMigrate(db *gorm.DB) error {
 
 // SeedDefaultData membuat user awal jika tabel users di database masih kosong
 func SeedDefaultData(db *gorm.DB) error {
+	// Lewati seeding otomatis di production kecuali diminta secara eksplisit
+	if IsProduction() && strings.ToLower(strings.TrimSpace(os.Getenv("SEED_DATA"))) != "true" {
+		return nil
+	}
+
 	var count int64
 	if err := db.Model(&model.User{}).Count(&count).Error; err != nil {
 		return err
